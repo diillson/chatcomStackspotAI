@@ -216,10 +216,14 @@ button:hover {
 
 /* 15. Estilos para o conteúdo renderizado de Markdown */
 .message strong {
-    display: block;
-    margin-bottom: 0.3125rem; /* 5px */
+    /*display: block;*/
+    /*margin-bottom: 0.3125rem; !* 5px *!*/
     color: #333;
     font-size: 1rem; /* Responsivo */
+    font-weight: bold;
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: normal;
 }
 
 .message p {
