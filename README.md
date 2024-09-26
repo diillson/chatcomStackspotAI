@@ -53,7 +53,7 @@ Bem-vindo ao aplicativo de chat interativo como o chatgpt, porém integrado à *
 
     - **Chave de API da StackSpot AI:** Crie duas variáveis de ambiente esperada pela aplicação `CLIENT_ID` e `CLIENT_SECRET` com sua chave de API da StackspotAI.
     - **Configuração de Endpoint:** Certifique-se de que o endpoint da API da StackSpot AI está configurado corretamente no `main.go` conforme após ter criado seu quickcommand, pois ai está onde a mágica acontece.
-    - **Configuração do quickcommand e passagem do SLUG:** Após ter criado no portal da stackspotAI seu quickcommand, anote o slug, Crie a variável `SLUG_NAME` coloque sua SLUG como valor para que tudo funcione conforme o esperado.
+    - **SLUG do quickcommand:** Após ter criado no portal da stackspotAI seu quickcommand, anote o slug, Crie a variável de ambiente esperada pela aplicação `SLUG_NAME` com sua SLUG para que tudo funcione conforme o esperado.
 
 4. **Instale as Dependências Backend:**
 
