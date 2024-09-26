@@ -57,7 +57,7 @@ func (tm *TokenManager) refreshToken() (string, error) {
 
 	log.Println("Renovando o access token...")
 
-	tokenURL := "https://idm.stackspot.com/itau/oidc/oauth/token"
+	tokenURL := "https://idm.stackspot.com/zup/oidc/oauth/token"
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
 	data.Set("client_id", tm.clientID)
@@ -109,7 +109,7 @@ func (tm *TokenManager) refreshToken() (string, error) {
 // Função para enviar a solicitação para a LLM
 func sendRequestToLLM(prompt, accessToken string) (string, error) {
 	conversationID := uuid.New().String() // Gerando um conversation_id único
-	slug := "camadazero"
+	slug := "SUA SLUG AQUI"
 
 	url := fmt.Sprintf("https://genai-code-buddy-api.stackspot.com/v1/quick-commands/create-execution/%s?conversation_id=%s", slug, conversationID)
 	log.Printf("Fazendo POST para URL: %s", url)

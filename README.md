@@ -52,9 +52,10 @@ Bem-vindo ao aplicativo de chat interativo como o chatgpt, porém integrado à *
 3. **Configurar Variáveis de Ambiente:**
 
     - **Chave de API da StackSpot AI:** Crie duas variáveis de ambiente esperada pela aplicação `CLIENT_ID` e `CLIENT_SECRET` com sua chave de API da StackspotAI.
-    - **Configuração de Endpoint:** Certifique-se de que o endpoint da API da StackSpot AI está configurado corretamente no `main.go`.
+    - **Configuração de Endpoint:** Certifique-se de que o endpoint da API da StackSpot AI está configurado corretamente no `main.go` conforme após ter criado seu quickcommand pois ai está onde a mágica acontece.
+    - **Configuração do quickcommand e passagem do SLUG** Após ter criado no portal da stackspotAI seu quickcommand, anote o slug, na função `sendRequestToLLM` do **main.go** terá a variável `slug := "SUA SLUG AQUI"` coloque sua SLUG para que tudo funcione conforme o esperado.
 
-4. **Instale as Dependências Backend (se houver):**
+4. **Instale as Dependências Backend:**
 
    ```bash
    go mod tidy
@@ -176,9 +177,10 @@ Este aplicativo depende fortemente das APIs fornecidas pela **StackSpot AI**. Se
 
 - **Sintomas:** Recebe erros de autenticação ao tentar se comunicar com a API.
 - **Soluções:**
-    - Verifique se a chave de API (`STACKSPOT_API_KEY`) está configurada corretamente.
+    - Verifique se a chave de API (`CLIENT_ID e CLIENT_SECRET`) está configurada corretamente.
+    - Verifique a estrutura da URL de token, geralmente pode ser, `zup, generic e outros` quando gera seu token para se comunicas com a API da StackspotAI, ele mostra qual tenant voce faz parte, exemplo: `https://idm.stackspot.com/zup/oidc/oauth/token`, aqui o tenant é **zup**, conforme aparece na URL, então se atente na função `refreshToken` do **main.go** para que esteja de acordo, ela quem disponibiliza a comunicação com a API da StackspotAI para resgatar ou atualizar seu token de sessão, na variável `tokenURL` voce precisa garantir apontamento para a URL com o tenant correto.
     - Confirme se a chave tem as permissões necessárias para acessar os serviços utilizados.
-    - Consulte a documentação da StackSpot AI para detalhes sobre autenticação.
+    - Consulte a documentação da StackSpot AI para detalhes sobre autenticação as suas API.
 
 ### Funções de Quick Commands ou Agentes Não Funcionam
 
