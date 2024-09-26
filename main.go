@@ -205,7 +205,9 @@ func getLLMResponse(responseID, accessToken string) (string, error) {
 	}
 
 	if len(callbackResponse.Steps) > 0 {
-		llmAnswer := callbackResponse.Steps[0].StepResult.Answer
+		lastStepIndex := len(callbackResponse.Steps) - 1
+		lastStep := callbackResponse.Steps[lastStepIndex]
+		llmAnswer := lastStep.StepResult.Answer
 		return llmAnswer, nil
 	} else {
 		return "", fmt.Errorf("nenhuma resposta disponível")
@@ -243,7 +245,7 @@ func sendMessageHandler(w http.ResponseWriter, r *http.Request, tm *TokenManager
 		log.Printf("Response ID recebido: %s", responseID)
 
 		var llmResponse string
-		maxAttempts := 15
+		maxAttempts := 50
 		for i := 0; i < maxAttempts; i++ {
 			time.Sleep(2 * time.Second) // Esperar antes de tentar novamente
 
