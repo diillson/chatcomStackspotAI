@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat com LLM</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
+
+    <!-- DOMPurify -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js" defer></script>
+
+    <!-- Highlight.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
+
+    <!-- Highlight.js JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js" defer></script>
+</head>
+<body>
+<!-- Botão de Toggle Sidebar fixo -->
+<button id="toggle-sidebar" aria-label="Ocultar barra lateral" class="toggle-sidebar">⬅</button>
+
+<div id="sidebar">
+    <div id="chat-list">
+        <!-- Lista de conversas anteriores será gerada dinamicamente aqui -->
+    </div>
+    <button id="new-chat-button" aria-label="Iniciar nova conversa">Nova Conversa</button>
+</div>
+
+<div id="chat-container">
+    <div id="messages"></div>
+    <form id="chat-form" aria-label="Formulário de Chat">
+        <input type="text" id="user-input" placeholder="Digite sua mensagem..." required aria-label="Entrada de mensagem">
+        <button type="submit" aria-label="Enviar mensagem">Enviar</button>
+        <button type="button" id="clear-history-button" aria-label="Limpar histórico">Limpar Histórico</button>
+    </form>
+</div>
+<script src="/static/js/script.js" defer></script>
+</body>
+</html>

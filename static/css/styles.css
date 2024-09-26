@@ -1,0 +1,351 @@
+/* 1. Definição Global do box-sizing */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* 2. Definição do tamanho base da fonte com responsividade */
+html {
+    font-size: clamp(12px, 1vw + 1rem, 16px); /* Tamanho base flexível */
+}
+
+/* 3. Estilos básicos para o chat */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    display: flex;
+    height: 100vh;
+    overflow: hidden; /* Evitar scroll indesejado */
+    margin: 0; /* Remover margens padrão */
+    position: relative;
+}
+
+/* 4. Barra Lateral (Sidebar) */
+#sidebar {
+    flex: 0 0 250px; /* Flex-shrink: 0; Flex-basis: 250px */
+    background-color: #f0f0f0;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    transition: flex-basis 0.3s ease; /* Animação para mostrar/ocultar */
+}
+
+/* 5. Botão de Toggle Sidebar */
+.toggle-sidebar {
+    position: fixed; /* Fixado para permanecer visível */
+    top: 10px;
+    left: 250px; /* Alinha com a largura do sidebar */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.3125rem 0.625rem; /* 5px 10px */
+    cursor: pointer;
+    border-radius: 4px;
+    transition: left 0.3s ease;
+    z-index: 1001; /* Z-index superior para garantir que fique acima de outros elementos */
+    font-size: 1rem; /* Responsivo */
+}
+
+#sidebar.hidden ~ .toggle-sidebar {
+    left: 10px; /* Move para a esquerda quando o sidebar está escondido */
+}
+
+/* 6. Lista de Conversas */
+#chat-list {
+    flex: 1;
+    padding: 0.625rem; /* 10px */
+    overflow-y: auto;
+}
+
+.chat-item {
+    padding: 0.625rem; /* 10px */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 0.3125rem; /* 5px */
+    cursor: pointer;
+    background-color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem; /* Responsivo */
+}
+
+.chat-item:hover {
+    background-color: #e6e6e6;
+}
+
+.chat-name {
+    flex: 1;
+    font-size: 1rem; /* Responsivo */
+}
+
+.edit-chat-name {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    margin-left: 0.3125rem; /* 5px */
+    font-size: 1rem; /* Responsivo */
+}
+
+/* Adicionando estilo para o botão de deletar chat */
+.delete-chat {
+    background: none;
+    border: none;
+    color: #dc3545; /* Cor vermelha para indicar ação de deletar */
+    cursor: pointer;
+    margin-left: 0.3125rem; /* 5px */
+    font-size: 1rem; /* Responsivo */
+}
+
+.delete-chat:hover {
+    color: #c82333; /* Cor mais escura ao passar o mouse */
+}
+
+/* 7. Botão "Nova Conversa" */
+#new-chat-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 0.625rem; /* 10px */
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 0.625rem; /* 10px */
+    font-size: 1rem; /* Responsivo */
+}
+
+#new-chat-button:hover {
+    background-color: #218838;
+}
+
+/* 8. Container do Chat */
+#chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: flex 0.3s ease; /* Animação para ajustar o layout quando a barra lateral está visível */
+    font-size: 1rem; /* Responsivo */
+}
+
+/* 9. Ajuste de layout quando a sidebar está ocultada */
+#sidebar.hidden ~ #chat-container {
+    /* Flex-grow já cuida do ajuste, nenhuma margem é necessária */
+}
+
+/* 10. Área de Mensagens */
+#messages {
+    flex: 1;
+    padding: 1.25rem; /* 20px */
+    overflow-y: auto;
+    background-color: #fafafa;
+    /* max-height: 80vh; */ /* Removido para permitir flexbox gerenciar a altura */
+    font-size: 1rem; /* Responsivo */
+}
+
+/* 11. Formulário de Chat */
+#chat-form {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #ddd;
+    padding: 0.625rem; /* 10px */
+    background-color: #f9f9f9;
+    font-size: 1rem; /* Responsivo */
+    margin-top: auto; /* Empurra o formulário para a parte inferior */
+}
+
+/* 12. Input de Mensagem */
+#user-input {
+    flex: 1;
+    padding: 0.625rem; /* 10px */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem; /* Responsivo */
+    box-sizing: border-box;
+}
+
+#user-input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+/* 13. Botões */
+button {
+    margin-left: 0.3125rem; /* 5px */
+    padding: 0.625rem 0.9375rem; /* 10px 15px */
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 1rem; /* Responsivo */
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#clear-history-button {
+    background-color: #dc3545;
+}
+
+#clear-history-button:hover {
+    background-color: #c82333;
+}
+
+/* 14. Mensagens */
+.message {
+    margin-bottom: 0.9375rem; /* 15px */
+    font-size: 1rem; /* Responsivo */
+}
+
+.user-message {
+    text-align: right;
+}
+
+.llm-message {
+    text-align: left;
+}
+
+/* 15. Estilos para o conteúdo renderizado de Markdown */
+.message strong {
+    display: block;
+    margin-bottom: 0.3125rem; /* 5px */
+    color: #333;
+    font-size: 1rem; /* Responsivo */
+}
+
+.message p {
+    margin: 0;
+    line-height: 1.5;
+    font-size: 1rem; /* Responsivo */
+}
+
+.message pre {
+    background-color: #272822;
+    color: #f8f8f2;
+    padding: 0.625rem; /* 10px */
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 0.875rem; /* Responsivo */
+}
+
+.message code {
+    background-color: #f5f5f5;
+    padding: 0.125rem 0.25rem; /* 2px 4px */
+    border-radius: 4px;
+    font-size: 0.875rem; /* Responsivo */
+}
+
+.message a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 1rem; /* Responsivo */
+}
+
+.message a:hover {
+    text-decoration: underline;
+}
+
+.message ul, .message ol {
+    padding-left: 1.25rem; /* 20px */
+    font-size: 1rem; /* Responsivo */
+}
+
+.message blockquote {
+    border-left: 4px solid #ddd;
+    padding-left: 0.625rem; /* 10px */
+    color: #555;
+    margin: 0;
+    font-size: 1rem; /* Responsivo */
+}
+
+/* 16. Estilos para o Indicador de Carregamento */
+.dots::after {
+    content: '...';
+    animation: dots 1s steps(5, end) infinite;
+}
+
+@keyframes dots {
+    0%, 20% {
+        color: rgba(0,0,0,0);
+        text-shadow:
+                0.25em 0 0 rgba(0,0,0,0),
+                0.5em 0 0 rgba(0,0,0,0);
+    }
+    40% {
+        color: black;
+        text-shadow:
+                0.25em 0 0 rgba(0,0,0,0),
+                0.5em 0 0 rgba(0,0,0,0);
+    }
+    60% {
+        text-shadow:
+                0.25em 0 0 black,
+                0.5em 0 0 rgba(0,0,0,0);
+    }
+    80%, 100% {
+        text-shadow:
+                0.25em 0 0 black,
+                0.5em 0 0 black;
+    }
+}
+
+/* 17. Responsividade */
+@media (max-width: 1200px) {
+    html {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 992px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 576px) {
+    html {
+        font-size: 12px;
+    }
+
+    #sidebar {
+        flex: 0 0 200px; /* Menor largura para dispositivos móveis */
+    }
+
+    .toggle-sidebar {
+        left: 200px; /* Alinha com a largura do sidebar */
+    }
+
+    #sidebar.hidden ~ .toggle-sidebar {
+        left: 10px; /* Move para a esquerda quando o sidebar está escondido */
+    }
+
+    #chat-container {
+        /* Flex-grow já cuida do ajuste */
+    }
+
+    #messages {
+        padding: 0.625rem; /* 10px */
+        font-size: 0.875rem; /* Responsivo */
+    }
+
+    #user-input {
+        padding: 0.625rem; /* 10px */
+        font-size: 0.875rem; /* Responsivo */
+    }
+
+    button {
+        padding: 0.625rem; /* 10px */
+        font-size: 0.875rem; /* Responsivo */
+    }
+}
