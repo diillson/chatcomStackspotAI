@@ -236,6 +236,17 @@ Espero que este aplicativo seja útil e proporcione uma experiência enriquecedo
 Agradeço à **StackSpot AI** por fornecer as ferramentas e APIs que tornam este aplicativo possível. Sua plataforma robusta e flexível permite criar soluções inovadoras de inteligência artificial de forma acessível e eficiente.
 
 ---
+## Screenshot
+
+### Chat-1
+![Conversa -1](images/chat1.png)
+### Chat-2
+![Conversa -2](images/chat2.png)
+### Chat-3
+![Conversa -3](images/chat3.png)
+### Backend/Logs-1
+![Execução de Backend/Logs](images/backend.png)
+
 
 ## Referências
 
