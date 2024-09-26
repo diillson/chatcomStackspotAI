@@ -109,7 +109,10 @@ func (tm *TokenManager) refreshToken() (string, error) {
 // Função para enviar a solicitação para a LLM
 func sendRequestToLLM(prompt, accessToken string) (string, error) {
 	conversationID := uuid.New().String() // Gerando um conversation_id único
-	slug := "SUA SLUG AQUI"
+	slug := os.Getenv("SLUG_NAME")
+	if slug == "" {
+		log.Fatal("SLUG_NAME deve estar definidos nas variáveis de ambiente")
+	}
 
 	url := fmt.Sprintf("https://genai-code-buddy-api.stackspot.com/v1/quick-commands/create-execution/%s?conversation_id=%s", slug, conversationID)
 	log.Printf("Fazendo POST para URL: %s", url)
