@@ -132,7 +132,7 @@ Este aplicativo depende fortemente das APIs fornecidas pela **StackSpot AI**. Se
 - **Uso no Aplicativo:** O aplicativo utiliza **Quick Commands** para processar certos tipos de solicitações de maneira eficiente, como executar ações específicas ou obter respostas padronizadas.
 - **Exemplos de Comandos:**
     - `explain-code`: Solicita à IA que explique um trecho de código fornecido.
-    - `camadazero`: Um comando personalizado para obter informações sobre um tópico específico.
+    - `camadazero`: Um slug de quickcommand onde possui um comando personalizado para obter informações sobre um tópico específico.
 
 ### Agentes Especializados
 
