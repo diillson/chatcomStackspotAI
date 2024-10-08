@@ -199,18 +199,22 @@ func getLLMResponse(responseID, accessToken string) (string, error) {
 		return "", err
 	}
 
-	if callbackResponse.Progress.Status != "COMPLETED" {
+	switch callbackResponse.Progress.Status {
+	case "COMPLETED":
+		if len(callbackResponse.Steps) > 0 {
+			lastStepIndex := len(callbackResponse.Steps) - 1
+			lastStep := callbackResponse.Steps[lastStepIndex]
+			llmAnswer := lastStep.StepResult.Answer
+			return llmAnswer, nil
+		} else {
+			return "", fmt.Errorf("nenhuma resposta disponível")
+		}
+	case "FAILURE":
+		log.Printf("A execução falhou com status: %s", callbackResponse.Progress.Status)
+		return "", fmt.Errorf("a execução da LLM falhou")
+	default:
 		log.Printf("Status da execução: %s", callbackResponse.Progress.Status)
 		return "", fmt.Errorf("resposta ainda não está pronta")
-	}
-
-	if len(callbackResponse.Steps) > 0 {
-		lastStepIndex := len(callbackResponse.Steps) - 1
-		lastStep := callbackResponse.Steps[lastStepIndex]
-		llmAnswer := lastStep.StepResult.Answer
-		return llmAnswer, nil
-	} else {
-		return "", fmt.Errorf("nenhuma resposta disponível")
 	}
 }
 
@@ -258,6 +262,13 @@ func sendMessageHandler(w http.ResponseWriter, r *http.Request, tm *TokenManager
 			if strings.Contains(err.Error(), "resposta ainda não está pronta") {
 				log.Printf("Resposta ainda não está pronta, tentativa %d/%d", i+1, maxAttempts)
 				continue
+			}
+
+			// Verificar se a execução falhou
+			if strings.Contains(err.Error(), "a execução da LLM falhou") {
+				log.Printf("Falha na execução da LLM: %v", err)
+				http.Error(w, "A StackSpotAI teve problemas o QuickCommand não pôde processar a solicitação, Por favor, tente novamente mais tarde.", http.StatusInternalServerError)
+				return
 			}
 
 			// Outro erro ocorreu
