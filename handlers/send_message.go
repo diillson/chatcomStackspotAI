@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func SendMessageHandler(client llm.LLMClient) http.HandlerFunc {
+func SendMessageHandler(manager *llm.LLMManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			var data struct {
@@ -25,7 +25,12 @@ func SendMessageHandler(client llm.LLMClient) http.HandlerFunc {
 				return
 			}
 
-			log.Printf("Enviando prompt para a LLM")
+			client, _, err := manager.GetClient()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			llmResponse, err := client.SendPrompt(data.Prompt, data.History)
 			if err != nil {
 				log.Printf("Erro ao obter a resposta da LLM: %v", err)

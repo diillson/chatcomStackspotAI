@@ -12,6 +12,9 @@ const toggleSidebarButton = document.getElementById('toggle-sidebar');
 const sidebar = document.getElementById('sidebar');
 const llmProvider = document.body.dataset.llmProvider;
 const modelName = document.body.dataset.modelName;
+const llmProviderSelect = document.getElementById('llm-provider-select');
+
+llmProviderSelect.value = llmProvider;
 
 let currentChatID = null;
 
@@ -22,8 +25,8 @@ switch (llmProvider) {
         assistantName = 'StackSpotAI';
         break;
     case 'OPENAI':
-        if (modelName === 'gpt-4o') {
-            assistantName = 'GPT-4o';
+        if (modelName === 'gpt-4o-mini') {
+            assistantName = 'GPT-4o-mini';
         } else if (modelName === 'gpt-3.5-turbo') {
             assistantName = 'ChatGPT';
         } else {
@@ -64,6 +67,26 @@ document.addEventListener('DOMContentLoaded', () => {
         loadChatHistory();
     }
 });
+
+llmProviderSelect.addEventListener('change', () => {
+    const provider = llmProviderSelect.value;
+    fetch('/change-provider', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider })
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => { throw new Error(text) });
+            }
+            // Atualizar a página ou ajustar o assistantName
+            location.reload();
+        })
+        .catch(error => {
+            console.error("Erro ao alterar o provedor:", error);
+        });
+});
+
 
 // Função para verificar se um chat existe
 function isChatExists(chatID) {

@@ -9,11 +9,11 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
 - [Instalação e Configuração](#instalação-e-configuração)
 - [Uso](#uso)
 - [Integração com a StackSpot AI e OpenAI](#integração-com-a-stackspot-ai-e-openai)
-    - [Provedores de LLM](#provedores-de-llm)
-    - [Fontes de Conhecimento (StackSpot AI)](#fontes-de-conhecimento-stackspot-ai)
-    - [Comandos Rápidos (StackSpot AI)](#comandos-rápidos-stackspot-ai)
-    - [Agentes Especializados (StackSpot AI)](#agentes-especializados-stackspot-ai)
-    - [Manutenção de Contexto (OpenAI)](#manutenção-de-contexto-openai)
+  - [Provedores de LLM](#provedores-de-llm)
+  - [Fontes de Conhecimento (StackSpot AI)](#fontes-de-conhecimento-stackspot-ai)
+  - [Comandos Rápidos (StackSpot AI)](#comandos-rápidos-stackspot-ai)
+  - [Agentes Especializados (StackSpot AI)](#agentes-especializados-stackspot-ai)
+  - [Manutenção de Contexto (OpenAI)](#manutenção-de-contexto-openai)
 - [Detalhes Técnicos](#detalhes-técnicos)
 - [Resolução de Problemas](#resolução-de-problemas)
 - [Contribuição](#contribuição)
@@ -27,13 +27,13 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
 - **Chat Interativo:** Converse com uma inteligência artificial em tempo real, alimentada pela StackSpot AI ou pela OpenAI.
 - **Múltiplas Conversas:** Crie, renomeie e exclua chats independentes.
 - **Manutenção de Contexto:** O assistente de IA mantém o contexto da conversa para interações mais coerentes (ao usar OpenAI).
+- **Troca Dinâmica de Provedor de LLM:** Alterne entre StackSpot AI e OpenAI em tempo de execução, sem reiniciar a aplicação.
 - **Barra Lateral Personalizável:** Oculte ou exiba a barra lateral conforme sua preferência.
 - **Histórico de Mensagens:** O histórico é armazenado no `localStorage` do navegador.
 - **Suporte a Markdown:** Envie e receba mensagens formatadas em Markdown, com realce de sintaxe para código.
 - **Indicador de Carregamento:** Enquanto a IA processa sua mensagem, um indicador "Pensando..." é exibido.
 - **Interface Responsiva:** Design adaptável para diversos tamanhos de tela.
 - **Segurança Integrada:** Sanitização de conteúdo para prevenir execução de código malicioso.
-- **Seleção Dinâmica de Provedor de LLM:** Escolha entre StackSpot AI e OpenAI como o provedor de modelo de linguagem via variáveis de ambiente.
 - **Seleção de Modelo (OpenAI):** Configure o aplicativo para usar diferentes modelos da OpenAI, como `gpt-3.5-turbo` ou `gpt-4`.
 
 ## Pré-requisitos
@@ -41,13 +41,13 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
 - **Go:** Versão 1.20+ instalada em sua máquina.
 - **Navegador Moderno:** Google Chrome, Mozilla Firefox, Microsoft Edge ou equivalente.
 - **Acesso a Provedores de LLM:**
-    - **Para StackSpot AI:**
-        - Conta com acesso às APIs da StackSpot AI.
-        - `CLIENT_ID`, `CLIENT_SECRET` e `SLUG_NAME` para autenticação e acesso à API.
-    - **Para OpenAI:**
-        - Chave de API da OpenAI com acesso aos modelos desejados (por exemplo, `gpt-3.5-turbo`, `gpt-4`).
-        - Observe que o acesso ao `gpt-4` pode exigir permissões adicionais.
-- **Chaves de API:** Chaves de API e variáveis de ambiente configuradas corretamente para o provedor de LLM selecionado.
+  - **Para StackSpot AI:**
+    - Conta com acesso às APIs da StackSpot AI.
+    - `CLIENT_ID`, `CLIENT_SECRET` e `SLUG_NAME` para autenticação e acesso à API.
+  - **Para OpenAI:**
+    - Chave de API da OpenAI com acesso aos modelos desejados (por exemplo, `gpt-3.5-turbo`, `gpt-4`).
+    - Observe que o acesso ao `gpt-4` pode exigir permissões adicionais.
+- **Chaves de API:** Chaves de API e variáveis de ambiente configuradas corretamente para os provedores de LLM.
 
 ## Instalação e Configuração
 
@@ -65,11 +65,10 @@ cd chatcomStackspotAI/
 
 ### 3. Configurar Variáveis de Ambiente
 
-Dependendo do provedor de LLM que você deseja usar, defina as variáveis de ambiente apropriadas.
+Defina as variáveis de ambiente para os provedores de LLM que deseja utilizar.
 
 #### Para StackSpot AI:
 
-- **LLM_PROVIDER:** Defina como `STACKSPOT`.
 - **CLIENT_ID:** Seu `client_id` da StackSpot AI.
 - **CLIENT_SECRET:** Seu `client_secret` da StackSpot AI.
 - **SLUG_NAME:** O slug do seu Quick Command ou agente.
@@ -77,29 +76,24 @@ Dependendo do provedor de LLM que você deseja usar, defina as variáveis de amb
 Exemplo:
 
 ```bash
-export LLM_PROVIDER=STACKSPOT
 export CLIENT_ID=seu_client_id
 export CLIENT_SECRET=seu_client_secret
 export SLUG_NAME=seu_slug_name
 ```
 
-**Nota:** Certifique-se de que o `tokenURL` na função `refreshToken` aponta para o tenant correto, por exemplo, `https://idm.stackspot.com/zup/oidc/oauth/token`, onde `zup` é o tenant.
-
 #### Para OpenAI:
 
-- **LLM_PROVIDER:** Defina como `OPENAI`.
 - **OPENAI_API_KEY:** Sua chave de API da OpenAI.
 - **OPENAI_MODEL:** O modelo que você deseja usar (`gpt-3.5-turbo`, `gpt-4`, etc.).
 
 Exemplo:
 
 ```bash
-export LLM_PROVIDER=OPENAI
 export OPENAI_API_KEY=sua_chave_api_openai
 export OPENAI_MODEL=gpt-4  # ou gpt-3.5-turbo
 ```
 
-**Nota:** Certifique-se de que sua chave de API da OpenAI tem acesso ao modelo especificado.
+**Nota:** Certifique-se de que suas chaves de API têm acesso aos modelos especificados.
 
 ### 4. Instale as Dependências Backend
 
@@ -161,6 +155,13 @@ http://localhost:8080
 ### Limpar Histórico
 
 - Dentro de uma conversa, clique no botão **"Limpar Histórico"** para apagar todas as mensagens daquela conversa.
+
+### Trocar o Provedor de LLM em Tempo de Execução
+
+- No topo da página, você encontrará um menu suspenso que permite selecionar o provedor de LLM desejado.
+- Selecione entre **StackSpotAI** e **OpenAI**.
+- Ao alterar o provedor, a aplicação atualizará automaticamente para utilizar o novo provedor selecionado.
+- **Observação:** Certifique-se de que as chaves de API e configurações para ambos os provedores estejam corretamente definidas, conforme explicado na seção [Instalação e Configuração](#instalação-e-configuração).
 
 ## Integração com a StackSpot AI e OpenAI
 
@@ -237,7 +238,28 @@ Você pode selecionar o provedor de Modelo de Linguagem (LLM) via variável de a
 
 - **`localStorage`:** Utilizado para armazenar o histórico de conversas e o estado atual do aplicativo no navegador do usuário.
 
+### Modificações para Suporte à Troca Dinâmica de Provedor de LLM
+
+- **LLMManager:** Implementação de uma estrutura que gerencia múltiplos clientes LLM e permite a troca dinâmica do provedor.
+- **Endpoints Atualizados:**
+  - **`/change-provider`:** Novo endpoint que recebe solicitações para alterar o provedor de LLM em tempo de execução.
+- **Atualizações no Frontend:**
+  - Adicionado um seletor (`select`) no `index.html` para permitir que o usuário escolha o provedor de LLM.
+  - `script.js` atualizado para lidar com a mudança de provedor e recarregar a interface adequadamente.
+- **Considerações sobre Concorrência:**
+  - Uso de mutexes para garantir que a alteração do provedor seja thread-safe.
+  - Garantia de que as instâncias dos clientes LLM são thread-safe.
+
 ## Resolução de Problemas
+
+### Provedor de LLM Não Altera
+
+- **Sintomas:** Ao selecionar um novo provedor de LLM, a aplicação continua utilizando o provedor anterior.
+- **Soluções:**
+  - Verifique se as variáveis de ambiente para ambos os provedores estão definidas e acessíveis pela aplicação.
+  - Certifique-se de que o cliente para o provedor selecionado foi inicializado corretamente.
+  - Confira se não há erros no console do navegador ou nos logs do servidor que possam indicar problemas na mudança de provedor.
+  - Limpe o cache do navegador ou faça um recarregamento forçado da página.
 
 ### Falha na Autenticação com o Provedor de LLM
 

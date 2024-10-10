@@ -22,6 +22,10 @@ func NewOpenAIClient(apiKey, model string) *OpenAIClient {
 	}
 }
 
+func (c *OpenAIClient) GetModelName() string {
+	return c.model
+}
+
 func (c *OpenAIClient) SendPrompt(prompt string, history []models.Message) (string, error) {
 	url := "https://api.openai.com/v1/chat/completions"
 

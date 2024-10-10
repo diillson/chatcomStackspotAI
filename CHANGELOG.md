@@ -1,5 +1,34 @@
 # Changelog
 
+## Versão 2.1.0 - Data: 09 de outubro de 2024
+
+### Novas Funcionalidades
+
+- **Troca Dinâmica de Provedor de LLM:**
+  - Implementamos a capacidade de alternar entre os provedores StackSpot AI e OpenAI em tempo de execução, sem a necessidade de reiniciar a aplicação.
+  - Adicionamos a estrutura `LLMManager` para gerenciar múltiplos clientes LLM e permitir a seleção dinâmica do provedor.
+  - Criamos o endpoint `/change-provider` para receber solicitações de alteração de provedor.
+  - Atualizamos o frontend para incluir um menu suspenso que permite aos usuários selecionar o provedor de LLM desejado.
+
+### Melhorias
+
+- **Correções de Bugs:**
+  - Mudança no uso do modelo OpenAI (`gpt-4o` para `gpt-4o-mini`), garantindo que o modelo com melhor custo seja utilizado como default.
+  - Adicionamos logs adicionais nos handlers e no `LLMManager` para facilitar a depuração e monitoramento da aplicação.
+  - Asseguramos que as variáveis de ambiente necessárias para ambos os provedores estejam definidas e acessíveis pela aplicação.
+
+- **Interface do Usuário:**
+  - Ajustamos o `script.js` e o `index.html` para refletir a seleção do provedor atual e atualizar dinamicamente o nome do assistente.
+
+### Documentação
+
+- **Atualização do README.md:**
+  - Incluímos instruções detalhadas sobre como utilizar a nova funcionalidade de troca dinâmica de provedores.
+  - Atualizamos as seções de funcionalidades e uso para refletir as mudanças implementadas.
+  - Adicionamos informações técnicas sobre a implementação da troca dinâmica do provedor de LLM.
+
+---
+
 ## Versão 2.0.0 - Data: 09 de outubro de 2024
 
 ### Novas Funcionalidades

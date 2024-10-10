@@ -27,6 +27,10 @@ func NewStackSpotClient(tokenManager *TokenManager, slug string) *StackSpotClien
 	}
 }
 
+func (c *StackSpotClient) GetModelName() string {
+	return "StackSpotAI"
+}
+
 func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (string, error) {
 	token, err := c.tokenManager.GetAccessToken()
 	if err != nil {
