@@ -1,4 +1,4 @@
-module chatcomStackspotAI
+module github.com/chatcomStackspotAI
 
 go 1.23.1
 

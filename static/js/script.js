@@ -10,8 +10,30 @@ const clearHistoryButton = document.getElementById('clear-history-button');
 const newChatButton = document.getElementById('new-chat-button');
 const toggleSidebarButton = document.getElementById('toggle-sidebar');
 const sidebar = document.getElementById('sidebar');
+const llmProvider = document.body.dataset.llmProvider;
+const modelName = document.body.dataset.modelName;
 
 let currentChatID = null;
+
+let assistantName;
+
+switch (llmProvider) {
+    case 'STACKSPOT':
+        assistantName = 'StackSpotAI';
+        break;
+    case 'OPENAI':
+        if (modelName === 'gpt-4o') {
+            assistantName = 'GPT-4o';
+        } else if (modelName === 'gpt-3.5-turbo') {
+            assistantName = 'ChatGPT';
+        } else {
+            assistantName = 'OpenAI Assistant';
+        }
+        break;
+    default:
+        assistantName = 'Assistente';
+}
+
 
 // Inicializar e carregar chats
 document.addEventListener('DOMContentLoaded', () => {
@@ -92,6 +114,7 @@ toggleSidebarButton.addEventListener('click', () => {
  * @param {boolean} isMarkdown - Indica se a mensagem contém Markdown.
  * @param {boolean} save - Indica se a mensagem deve ser salva no localStorage.
  */
+// Função para adicionar mensagem ao chat
 function addMessage(sender, text, isMarkdown = false, save = true) {
     console.log(`Adicionando mensagem: ${sender} - ${text}`);
     const messageElement = document.createElement('div');
@@ -122,14 +145,22 @@ function addMessage(sender, text, isMarkdown = false, save = true) {
 // Função para enviar mensagem para o servidor
 function sendMessageToServer(message) {
     console.log("Enviando mensagem para o servidor:", message);
-    addMessage('StackSpotAI', 'Pensando<span class="dots">...</span>', false, true);
+
+    // Obter o histórico do chat atual
+    const conversationHistory = getConversationHistory();
+
+    // Adicionar indicador de carregamento
+    addMessage(assistantName, 'Pensando<span class="dots">...</span>', false, true);
 
     fetch('/send', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ prompt: message })
+        body: JSON.stringify({
+            prompt: message,
+            history: conversationHistory // Enviando o histórico da conversa
+        })
     })
         .then(response => {
             if (!response.ok) {
@@ -141,7 +172,7 @@ function sendMessageToServer(message) {
         .then(data => {
             console.log("Resposta do servidor:", data);
             removeLastMessage();
-            addMessage('StackSpotAI', data.response, true, true);
+            addMessage(assistantName, data.response, true, true);
         })
         .catch(error => {
             console.error("Erro ao enviar mensagem:", error);
@@ -149,6 +180,28 @@ function sendMessageToServer(message) {
             addMessage('Erro', error.message, false, true);
         });
 }
+
+function getConversationHistory() {
+    if (!currentChatID) {
+        console.error("currentChatID não está definido.");
+        return [];
+    }
+
+    const history = JSON.parse(localStorage.getItem(currentChatID)) || [];
+    const conversation = [];
+
+    history.forEach(msg => {
+        if (msg.sender === 'Você') {
+            conversation.push({ role: 'user', content: msg.text });
+        } else if (msg.sender === assistantName) {
+            conversation.push({ role: 'assistant', content: msg.text });
+        }
+        // Ignorar mensagens do tipo 'Erro' ou outros remetentes
+    });
+
+    return conversation;
+}
+
 
 // Função para remover a última mensagem (indicador de carregamento)
 function removeLastMessage() {

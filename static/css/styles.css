@@ -242,7 +242,8 @@ button:hover {
 }
 
 .message code {
-    background-color: #f5f5f5;
+    background-color: #272822;
+    color: #f8f8f2;
     padding: 0.125rem 0.25rem; /* 2px 4px */
     border-radius: 4px;
     font-size: 0.875rem; /* Responsivo */
