@@ -185,12 +185,25 @@ function addMessage(sender, text, isMarkdown = false, save = true, isTyping = fa
 }
 
 
-const increment = 5;
+// Variável global para controlar o auto-scroll
+let shouldAutoScroll = true;
+
+// Adicionar event listener para detectar o scroll do usuário
+messagesDiv.addEventListener('scroll', function() {
+    // Verificar se o usuário está no final da área de mensagens
+    if (messagesDiv.scrollHeight - messagesDiv.scrollTop <= messagesDiv.clientHeight + 50) {
+        shouldAutoScroll = true;
+    } else {
+        shouldAutoScroll = false;
+    }
+});
+
 
 // Função para exibir o texto gradualmente com formatação Markdown
 function typeTextWithMarkdown(element, fullText, isMarkdown, callback) {
     let index = 0;
-    const speed = 30; // Velocidade de digitação em ms (ajuste conforme necessário)
+    const speed = 10; // Velocidade de digitação em ms (ajuste conforme necessário)
+    const increment = 2;
 
     function typing() {
         if (index <= fullText.length) {
@@ -214,9 +227,12 @@ function typeTextWithMarkdown(element, fullText, isMarkdown, callback) {
                 element.textContent = partialText;
             }
 
+            if (shouldAutoScroll){
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+
             index+= increment;
             setTimeout(typing, speed);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         } else {
             if (callback) callback();
         }
