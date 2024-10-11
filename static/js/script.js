@@ -138,31 +138,105 @@ toggleSidebarButton.addEventListener('click', () => {
  * @param {boolean} save - Indica se a mensagem deve ser salva no localStorage.
  */
 // Função para adicionar mensagem ao chat
-function addMessage(sender, text, isMarkdown = false, save = true) {
+// Função para adicionar mensagem ao chat com efeito de digitação e formatação em tempo real
+function addMessage(sender, text, isMarkdown = false, save = true, isTyping = false) {
     console.log(`Adicionando mensagem: ${sender} - ${text}`);
     const messageElement = document.createElement('div');
     messageElement.classList.add('message', sender === 'Você' ? 'user-message' : 'llm-message');
 
-    if (isMarkdown) {
-        const rawHtml = marked.parse(text);
-        const cleanHtml = DOMPurify.sanitize(rawHtml);
-        messageElement.innerHTML = `<strong>${sender}:</strong> ${cleanHtml}`;
-        // Highlight code blocks
-        messageElement.querySelectorAll('pre code').forEach((block) => {
-            if (hljs) {
-                hljs.highlightElement(block);
-            }
-        });
-    } else {
-        messageElement.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    }
-
+    messageElement.innerHTML = `<strong>${sender}:</strong> <span class="message-content"></span>`;
     messagesDiv.appendChild(messageElement);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-    if (save) {
-        saveMessage(sender, text, isMarkdown);
+    const contentElement = messageElement.querySelector('.message-content');
+
+    if (isTyping) {
+        typeTextWithMarkdown(contentElement, text, isMarkdown, () => {
+            // Após a digitação, garantir que o texto completo está salvo
+            if (save) {
+                saveMessage(sender, text, isMarkdown);
+            }
+        });
+    } else {
+        if (isMarkdown) {
+            // Processa e renderiza o Markdown
+            const rawHtml = marked.parse(text);
+            const cleanHtml = DOMPurify.sanitize(rawHtml);
+            contentElement.innerHTML = cleanHtml;
+
+            // Destaque de sintaxe
+            contentElement.querySelectorAll('pre code').forEach((block) => {
+                if (hljs) {
+                    hljs.highlightElement(block);
+                }
+            });
+        } else {
+            // Sanitiza e define o HTML diretamente
+            const cleanHtml = DOMPurify.sanitize(text);
+            contentElement.innerHTML = cleanHtml;
+        }
+
+        if (save) {
+            saveMessage(sender, text, isMarkdown);
+        }
     }
+}
+
+
+const increment = 5;
+
+// Função para exibir o texto gradualmente com formatação Markdown
+function typeTextWithMarkdown(element, fullText, isMarkdown, callback) {
+    let index = 0;
+    const speed = 30; // Velocidade de digitação em ms (ajuste conforme necessário)
+
+    function typing() {
+        if (index <= fullText.length) {
+            const partialText = fullText.substring(0, index);
+            let displayText;
+
+            if (isMarkdown) {
+                // Fechar blocos abertos temporariamente
+                const tempText = closeOpenBlocks(partialText);
+                const rawHtml = marked.parse(tempText);
+                const cleanHtml = DOMPurify.sanitize(rawHtml);
+                element.innerHTML = cleanHtml;
+
+                // Destaque de sintaxe
+                element.querySelectorAll('pre code').forEach((block) => {
+                    if (hljs) {
+                        hljs.highlightElement(block);
+                    }
+                });
+            } else {
+                element.textContent = partialText;
+            }
+
+            index+= increment;
+            setTimeout(typing, speed);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        } else {
+            if (callback) callback();
+        }
+    }
+
+    typing();
+}
+
+// Função para fechar blocos abertos temporariamente
+function closeOpenBlocks(text) {
+    // Contar ocorrências de blocos de código
+    const codeBlockMatches = text.match(/```/g);
+    const codeBlockCount = codeBlockMatches ? codeBlockMatches.length : 0;
+
+    // Se há um bloco de código não fechado, adicionar fechamento temporário
+    if (codeBlockCount % 2 !== 0) {
+        text += '\n```';
+    }
+
+    // Verificar listas, itálicos, negritos, etc., se necessário
+
+    return text;
 }
 
 // Função para enviar mensagem para o servidor
@@ -173,7 +247,7 @@ function sendMessageToServer(message) {
     const conversationHistory = getConversationHistory();
 
     // Adicionar indicador de carregamento
-    addMessage(assistantName, 'Pensando<span class="dots">...</span>', false, true);
+    addMessage(assistantName, 'Pensando<span class="dots">...</span>', false, false, false);
 
     fetch('/send', {
         method: 'POST',
@@ -195,7 +269,7 @@ function sendMessageToServer(message) {
         .then(data => {
             console.log("Resposta do servidor:", data);
             removeLastMessage();
-            addMessage(assistantName, data.response, true, true);
+            addMessage(assistantName, data.response, true, true, true);
         })
         .catch(error => {
             console.error("Erro ao enviar mensagem:", error);
