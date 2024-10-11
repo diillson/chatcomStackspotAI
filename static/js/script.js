@@ -25,10 +25,12 @@ switch (llmProvider) {
         assistantName = 'StackSpotAI';
         break;
     case 'OPENAI':
-        if (modelName === 'gpt-4o-mini') {
-            assistantName = 'GPT-4o-mini';
+        if (modelName === 'gpt-4') {
+            assistantName = 'GPT-4';
         } else if (modelName === 'gpt-3.5-turbo') {
             assistantName = 'ChatGPT';
+        } else if (modelName === 'gpt-4o-mini') {
+            assistantName = 'GPT-4o-mini';
         } else {
             assistantName = 'OpenAI Assistant';
         }
