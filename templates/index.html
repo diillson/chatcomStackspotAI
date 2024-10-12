@@ -19,6 +19,7 @@
 </head>
 <body data-llm-provider="{{.LLMProvider}}" data-model-name="{{.ModelName}}">
 
+<!-- Sidebar -->
 <div id="sidebar">
     <div id="chat-list">
         <!-- Lista de conversas anteriores será gerada dinamicamente aqui -->
@@ -26,21 +27,24 @@
     <button id="new-chat-button" aria-label="Iniciar nova conversa">Nova Conversa</button>
 </div>
 
-<!-- Botão de Toggle Sidebar fixo -->
+<!-- Botão de Toggle Sidebar -->
 <button id="toggle-sidebar" aria-label="Ocultar barra lateral" class="toggle-sidebar">⬅</button>
 
+<!-- Container Principal do Chat -->
 <div id="chat-container">
     <div id="messages"></div>
     <form id="chat-form" aria-label="Formulário de Chat">
-        <input type="text" id="user-input" placeholder="Digite sua mensagem..." required aria-label="Entrada de mensagem">
+        <textarea id="user-input" placeholder="Digite sua mensagem..." required aria-label="Entrada de mensagem" rows="1"></textarea>
         <button type="submit" aria-label="Enviar mensagem">Enviar</button>
         <button type="button" id="clear-history-button" aria-label="Limpar histórico">Limpar Histórico</button>
+        <select id="llm-provider-select" aria-label="Selecionar Provedor de LLM">
+            <option value="STACKSPOT">StackSpotAI</option>
+            <option value="OPENAI">OpenAI</option>
+        </select>
     </form>
-    <select id="llm-provider-select">
-        <option value="STACKSPOT">StackSpotAI</option>
-        <option value="OPENAI">OpenAI</option>
-    </select>
 </div>
+
+<!-- Scripts -->
 <script src="/static/js/script.js" defer></script>
 </body>
 </html>

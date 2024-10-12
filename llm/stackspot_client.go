@@ -31,6 +31,19 @@ func (c *StackSpotClient) GetModelName() string {
 	return "StackSpotAI"
 }
 
+// Função para formatar o histórico da conversa
+func formatConversationHistory(history []models.Message) string {
+	var conversationBuilder strings.Builder
+	for _, msg := range history {
+		role := "Usuário"
+		if msg.Role == "assistant" {
+			role = "Assistente"
+		}
+		conversationBuilder.WriteString(fmt.Sprintf("%s: %s\n", role, msg.Content))
+	}
+	return conversationBuilder.String()
+}
+
 func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (string, error) {
 	token, err := c.tokenManager.GetAccessToken()
 	if err != nil {
@@ -38,8 +51,14 @@ func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (s
 		return "", fmt.Errorf("Erro ao obter o token: %v", err)
 	}
 
-	// Enviar o prompt e obter o responseID
-	responseID, err := c.sendRequestToLLM(prompt, token)
+	// Formatar o histórico da conversa
+	conversationHistory := formatConversationHistory(history)
+
+	// Concatenar o histórico com o prompt atual
+	fullPrompt := fmt.Sprintf("%sUsuário: %s", conversationHistory, prompt)
+
+	// Enviar o prompt completo e obter o responseID
+	responseID, err := c.sendRequestToLLM(fullPrompt, token)
 	if err != nil {
 		log.Printf("Erro ao enviar a requisição para a LLM: %v", err)
 		return "", fmt.Errorf("Erro ao enviar a requisição: %v", err)

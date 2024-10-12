@@ -1,77 +1,85 @@
+/* styles.css */
+
 /* 1. Definição Global do box-sizing */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
 /* 2. Definição do tamanho base da fonte com responsividade */
 html {
-    font-size: clamp(12px, 1vw + 1rem, 16px); /* Tamanho base flexível */
+    font-size: clamp(12px, 1vw + 1rem, 16px);
 }
 
-/* 3. Estilos básicos para o chat */
+/* 3. Estilos básicos para o body */
 body {
     font-family: Arial, sans-serif;
     background-color: #f5f5f5;
     display: flex;
     height: 100vh;
-    overflow: hidden; /* Evitar scroll indesejado */
-    margin: 0; /* Remover margens padrão */
+    overflow: hidden;
+    margin: 0;
     position: relative;
 }
 
 /* 4. Barra Lateral (Sidebar) */
 #sidebar {
-    flex: 0 0 250px; /* Flex-shrink: 0; Flex-basis: 250px */
+    flex: 0 0 250px;
     background-color: #f0f0f0;
     border-right: 1px solid #ddd;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    transition: flex-basis 0.3s ease; /* Animação para mostrar/ocultar */
-}
-
-/* 5. Botão de Toggle Sidebar */
-.toggle-sidebar {
-    position: fixed; /* Fixado para permanecer visível */
-    top: 10px;
-    left: 250px; /* Alinha com a largura do sidebar */
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 0.3125rem 0.625rem; /* 5px 10px */
-    cursor: pointer;
-    border-radius: 4px;
-    transition: left 0.3s ease;
-    z-index: 1001; /* Z-index superior para garantir que fique acima de outros elementos */
-    font-size: 1rem; /* Responsivo */
-}
-
-#sidebar.hidden ~ .toggle-sidebar {
-    left: 10px; /* Move para a esquerda quando o sidebar está escondido */
+    transition: flex-basis 0.3s ease;
 }
 
 #sidebar.hidden {
     flex-basis: 0;
 }
 
+#sidebar.hidden ~ #chat-container {
+    flex: 1;
+}
+
+/* 5. Botão de Toggle Sidebar */
+.toggle-sidebar {
+    position: fixed;
+    top: 10px;
+    left: 250px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: left 0.3s ease;
+    z-index: 1001;
+    font-size: 1rem;
+}
+
+#sidebar.hidden ~ .toggle-sidebar {
+    left: 10px;
+}
+
 /* 6. Lista de Conversas */
 #chat-list {
     flex: 1;
-    padding: 0.625rem; /* 10px */
+    padding: 10px;
     overflow-y: auto;
 }
 
 .chat-item {
-    padding: 0.625rem; /* 10px */
+    padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    margin-bottom: 0.3125rem; /* 5px */
+    margin-bottom: 5px;
     cursor: pointer;
     background-color: #fff;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1rem; /* Responsivo */
+    font-size: 1rem;
 }
 
 .chat-item:hover {
@@ -80,30 +88,28 @@ body {
 
 .chat-name {
     flex: 1;
-    font-size: 1rem; /* Responsivo */
+    font-size: 1rem;
 }
 
-.edit-chat-name {
-    background: none;
-    border: none;
-    color: #007bff;
-    cursor: pointer;
-    margin-left: 0.3125rem; /* 5px */
-    font-size: 1rem; /* Responsivo */
-}
-
-/* Adicionando estilo para o botão de deletar chat */
+.edit-chat-name,
 .delete-chat {
     background: none;
     border: none;
-    color: #dc3545; /* Cor vermelha para indicar ação de deletar */
     cursor: pointer;
-    margin-left: 0.3125rem; /* 5px */
-    font-size: 1rem; /* Responsivo */
+    margin-left: 5px;
+    font-size: 1rem;
+}
+
+.edit-chat-name {
+    color: #007bff;
+}
+
+.delete-chat {
+    color: #dc3545;
 }
 
 .delete-chat:hover {
-    color: #c82333; /* Cor mais escura ao passar o mouse */
+    color: #c82333;
 }
 
 /* 7. Botão "Nova Conversa" */
@@ -111,11 +117,11 @@ body {
     background-color: #28a745;
     color: white;
     border: none;
-    padding: 0.625rem; /* 10px */
+    padding: 10px;
     cursor: pointer;
     border-radius: 4px;
-    margin: 0.625rem; /* 10px */
-    font-size: 1rem; /* Responsivo */
+    margin: 10px;
+    font-size: 1rem;
 }
 
 #new-chat-button:hover {
@@ -129,45 +135,42 @@ body {
     flex-direction: column;
     overflow: hidden;
     background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    transition: flex 0.3s ease; /* Animação para ajustar o layout quando a barra lateral está visível */
-    font-size: 1rem; /* Responsivo */
+    /* Removido border-radius e box-shadow para manter o estilo original */
 }
 
-/* 9. Ajuste de layout quando a sidebar está ocultada */
-#sidebar.hidden ~ #chat-container {
-    /* Flex-grow já cuida do ajuste, nenhuma margem é necessária */
-}
-
-/* 10. Área de Mensagens */
+/* 9. Área de Mensagens */
 #messages {
     flex: 1;
-    padding: 1.25rem; /* 20px */
+    padding: 20px;
     overflow-y: auto;
     background-color: #fafafa;
-    /* max-height: 80vh; */ /* Removido para permitir flexbox gerenciar a altura */
-    font-size: 1rem; /* Responsivo */
+    font-size: 1rem;
 }
 
-/* 11. Formulário de Chat */
+/* 10. Formulário de Chat */
 #chat-form {
     display: flex;
     align-items: center;
     border-top: 1px solid #ddd;
-    padding: 0.625rem; /* 10px */
+    padding: 10px;
     background-color: #f9f9f9;
-    font-size: 1rem; /* Responsivo */
-    margin-top: auto; /* Empurra o formulário para a parte inferior */
+    margin-top: auto;
+    font-size: 1rem;
+    gap: 5px; /* Espaçamento entre os elementos */
 }
 
-/* 12. Input de Mensagem */
+/* 11. Input de Mensagem */
 #user-input {
     flex: 1;
-    padding: 0.625rem; /* 10px */
+    min-height: 40px;
+    max-height: 300px;
+    padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 1rem; /* Responsivo */
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: none;
+    overflow-y: auto;
     box-sizing: border-box;
 }
 
@@ -176,34 +179,52 @@ body {
     border-color: #007bff;
 }
 
-/* 13. Botões */
-button {
-    margin-left: 0.3125rem; /* 5px */
-    padding: 0.625rem 0.9375rem; /* 10px 15px */
-    border: none;
-    background-color: #007bff;
-    color: #fff;
-    font-size: 1rem; /* Responsivo */
-    cursor: pointer;
-    border-radius: 4px;
+/* Opcional: remover a borda de redimensionamento no canto */
+#user-input::-webkit-resizer {
+    display: none;
 }
 
-button:hover {
+/* 12. Botões */
+#chat-form button,
+#chat-form select {
+    flex-shrink: 0;
+    padding: 10px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+    white-space: nowrap;
+    border: none; /* Mover o border: none aqui */
+}
+
+#chat-form button[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+}
+
+#chat-form button[type="submit"]:hover {
     background-color: #0056b3;
 }
 
 #clear-history-button {
     background-color: #dc3545;
+    color: #fff; /* Garantir que o texto seja branco */
 }
 
 #clear-history-button:hover {
     background-color: #c82333;
 }
 
-/* 14. Mensagens */
+#llm-provider-select {
+    /* Ajuste opcional para o select */
+    padding: 10px;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* 13. Mensagens */
 .message {
-    margin-bottom: 0.9375rem; /* 15px */
-    font-size: 1rem; /* Responsivo */
+    margin-bottom: 15px;
+    font-size: 1rem;
 }
 
 .user-message {
@@ -214,65 +235,61 @@ button:hover {
     text-align: left;
 }
 
-/* 15. Estilos para o conteúdo renderizado de Markdown */
+/* 14. Estilos para o conteúdo renderizado de Markdown */
 .message strong {
-    /*display: block;*/
-    /*margin-bottom: 0.3125rem; !* 5px *!*/
     color: #333;
-    font-size: 1rem; /* Responsivo */
     font-weight: bold;
-    white-space: pre-wrap;
-    word-break: normal;
-    overflow-wrap: normal;
+    /* Removido display: block e margin-bottom para evitar nova linha */
 }
 
 .message p {
     margin: 0;
     line-height: 1.5;
-    font-size: 1rem; /* Responsivo */
+    font-size: 1rem;
 }
 
 .message pre {
     background-color: #272822;
     color: #f8f8f2;
-    padding: 0.625rem; /* 10px */
+    padding: 10px;
     border-radius: 4px;
     overflow-x: auto;
-    font-size: 0.875rem; /* Responsivo */
+    font-size: 0.875rem;
 }
 
 .message code {
     background-color: #272822;
     color: #f8f8f2;
-    padding: 0.125rem 0.25rem; /* 2px 4px */
+    padding: 2px 4px;
     border-radius: 4px;
-    font-size: 0.875rem; /* Responsivo */
+    font-size: 0.9rem;
 }
 
 .message a {
     color: #007bff;
     text-decoration: none;
-    font-size: 1rem; /* Responsivo */
+    font-size: 1rem;
 }
 
 .message a:hover {
     text-decoration: underline;
 }
 
-.message ul, .message ol {
-    padding-left: 1.25rem; /* 20px */
-    font-size: 1rem; /* Responsivo */
+.message ul,
+.message ol {
+    padding-left: 20px;
+    font-size: 1rem;
 }
 
 .message blockquote {
     border-left: 4px solid #ddd;
-    padding-left: 0.625rem; /* 10px */
+    padding-left: 10px;
     color: #555;
     margin: 0;
-    font-size: 1rem; /* Responsivo */
+    font-size: 1rem;
 }
 
-/* 16. Estilos para o Indicador de Carregamento */
+/* 15. Estilos para o Indicador de Carregamento */
 .dots::after {
     content: '';
     display: inline-block;
@@ -282,7 +299,8 @@ button:hover {
 }
 
 @keyframes dots {
-    0%, 20% {
+    0%,
+    20% {
         content: '';
     }
     40% {
@@ -291,37 +309,13 @@ button:hover {
     60% {
         content: '..';
     }
-    80%, 100% {
+    80%,
+    100% {
         content: '...';
     }
 }
 
-/*@keyframes dots {*/
-/*    0%, 20% {*/
-/*        color: rgba(0,0,0,0);*/
-/*        text-shadow:*/
-/*                0.25em 0 0 rgba(0,0,0,0),*/
-/*                0.5em 0 0 rgba(0,0,0,0);*/
-/*    }*/
-/*    40% {*/
-/*        color: black;*/
-/*        text-shadow:*/
-/*                0.25em 0 0 rgba(0,0,0,0),*/
-/*                0.5em 0 0 rgba(0,0,0,0);*/
-/*    }*/
-/*    60% {*/
-/*        text-shadow:*/
-/*                0.25em 0 0 black,*/
-/*                0.5em 0 0 rgba(0,0,0,0);*/
-/*    }*/
-/*    80%, 100% {*/
-/*        text-shadow:*/
-/*                0.25em 0 0 black,*/
-/*                0.5em 0 0 black;*/
-/*    }*/
-/*}*/
-
-/* 17. Responsividade */
+/* 16. Responsividade */
 @media (max-width: 1200px) {
     html {
         font-size: 15px;
@@ -343,36 +337,35 @@ button:hover {
 @media (max-width: 576px) {
     html {
         font-size: 12px;
-    }
 
-    #sidebar {
-        flex: 0 0 200px; /* Menor largura para dispositivos móveis */
-    }
+        /* Ajustes para dispositivos móveis */
 
-    .toggle-sidebar {
-        left: 200px; /* Alinha com a largura do sidebar */
-    }
+        #sidebar {
+            flex: 0 0 200px;
+        }
 
-    #sidebar.hidden ~ .toggle-sidebar {
-        left: 10px; /* Move para a esquerda quando o sidebar está escondido */
-    }
+        .toggle-sidebar {
+            left: 200px;
+        }
 
-    #chat-container {
-        /* Flex-grow já cuida do ajuste */
-    }
+        #sidebar.hidden ~ .toggle-sidebar {
+            left: 10px;
+        }
 
-    #messages {
-        padding: 0.625rem; /* 10px */
-        font-size: 0.875rem; /* Responsivo */
-    }
+        #messages {
+            padding: 10px;
+            font-size: 0.875rem;
+        }
 
-    #user-input {
-        padding: 0.625rem; /* 10px */
-        font-size: 0.875rem; /* Responsivo */
-    }
+        #user-input {
+            padding: 10px;
+            font-size: 0.875rem;
+        }
 
-    button {
-        padding: 0.625rem; /* 10px */
-        font-size: 0.875rem; /* Responsivo */
+        #chat-form button,
+        #llm-provider-select {
+            padding: 10px;
+            font-size: 0.875rem;
+        }
     }
 }
