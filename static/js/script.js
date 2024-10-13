@@ -1,3 +1,5 @@
+/* script.js */
+
 (function () {
     'use strict';
 
@@ -168,7 +170,7 @@
         // Função para ajustar a altura do textarea automaticamente
         function autoResizeTextarea() {
             this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
+            this.style.height = `${this.scrollHeight}px`;
         }
 
         // Debounce para limitar a frequência de execução de funções
@@ -220,10 +222,14 @@
         function toggleSidebar() {
             if (sidebar.classList.contains('visible')) {
                 sidebar.classList.remove('visible');
+                sidebar.classList.add('hidden');
                 toggleSidebarButton.textContent = '☰'; // Ícone de menu
+                toggleSidebarButton.setAttribute('aria-label', 'Mostrar barra lateral');
             } else {
+                sidebar.classList.remove('hidden');
                 sidebar.classList.add('visible');
                 toggleSidebarButton.textContent = '✕'; // Ícone de fechar
+                toggleSidebarButton.setAttribute('aria-label', 'Ocultar barra lateral');
             }
         }
 
@@ -517,5 +523,5 @@
             loadChatList();
             return newChatID;
         }
-    });
+    })();
 })();
