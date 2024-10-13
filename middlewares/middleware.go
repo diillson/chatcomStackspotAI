@@ -13,7 +13,7 @@ func ForceHTTPSMiddleware(next http.Handler) http.Handler {
 		env := os.Getenv("ENV")
 		log.Printf("Recebendo requisição de %s %s %s", r.RemoteAddr, r.Method, r.URL.Path)
 
-		if env != "production" {
+		if env != "prod" {
 			// Não forçar HTTPS em ambientes não-producao
 			next.ServeHTTP(w, r)
 			return
