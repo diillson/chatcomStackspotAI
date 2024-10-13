@@ -157,11 +157,12 @@ body {
     margin-top: auto;
     font-size: 1rem;
     gap: 5px; /* Espaçamento entre os elementos */
+    flex-wrap: wrap; /* Permitir quebra de linha em telas pequenas */
 }
 
 /* 11. Input de Mensagem */
 #user-input {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 40px;
     max-height: 300px;
     padding: 10px;
@@ -193,7 +194,7 @@ body {
     cursor: pointer;
     border-radius: 4px;
     white-space: nowrap;
-    border: none; /* Mover o border: none aqui */
+    border: none;
 }
 
 #chat-form button[type="submit"] {
@@ -207,7 +208,7 @@ body {
 
 #clear-history-button {
     background-color: #dc3545;
-    color: #fff; /* Garantir que o texto seja branco */
+    color: #fff;
 }
 
 #clear-history-button:hover {
@@ -215,7 +216,6 @@ body {
 }
 
 #llm-provider-select {
-    /* Ajuste opcional para o select */
     padding: 10px;
     font-size: 1rem;
     flex-shrink: 0;
@@ -316,56 +316,87 @@ body {
 }
 
 /* 16. Responsividade */
+
+/* Ajustes para telas entre 1200px e 992px */
 @media (max-width: 1200px) {
     html {
         font-size: 15px;
     }
 }
 
+/* Ajustes para telas entre 992px e 768px */
 @media (max-width: 992px) {
     html {
         font-size: 14px;
     }
 }
 
+/* Ajustes para telas entre 768px e 576px */
 @media (max-width: 768px) {
     html {
         font-size: 13px;
-    }
-}
 
-@media (max-width: 576px) {
-    html {
-        font-size: 12px;
-
-        /* Ajustes para dispositivos móveis */
+        /* Esconder a sidebar em telas pequenas */
 
         #sidebar {
-            flex: 0 0 200px;
+            display: none;
         }
+
+        /* Expandir o chat-container para ocupar toda a largura */
+
+        #chat-container {
+            flex: 1;
+        }
+
+        /* Ajustar o botão de toggle da sidebar */
 
         .toggle-sidebar {
-            left: 200px;
+            display: none;
         }
 
-        #sidebar.hidden ~ .toggle-sidebar {
-            left: 10px;
-        }
+        /* Ajustar o formulário de chat */
 
-        #messages {
-            padding: 10px;
-            font-size: 0.875rem;
+        #chat-form {
+            flex-wrap: wrap;
         }
 
         #user-input {
-            padding: 10px;
-            font-size: 0.875rem;
+            flex: 1 1 100%;
+            margin-bottom: 10px;
         }
 
         #chat-form button,
         #llm-provider-select {
+            flex: 1 1 calc(50% - 10px);
+            margin-bottom: 10px;
+        }
+
+        #messages {
+            padding: 15px;
+            font-size: 1rem;
+        }
+    }
+
+    /* Ajustes para telas menores que 576px */
+    @media (max-width: 576px) {
+        html {
+            font-size: 12px;
+        }
+
+        /* Ajustes adicionais para dispositivos móveis */
+        #messages {
             padding: 10px;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
+        }
+
+        #user-input {
+            min-height: 80px;
+        }
+
+        #chat-form button,
+        #llm-provider-select {
+            flex: 1 1 100%;
+            margin-bottom: 10px;
         }
     }
 }

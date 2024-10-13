@@ -50,7 +50,7 @@ func main() {
 	http.HandleFunc("/change-provider", handlers.ChangeProviderHandler(manager))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	fmt.Println("Servidor iniciado na porta %s...", port)
+	fmt.Println("Servidor iniciado na porta " + port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		log.Fatalf("Erro ao carregar o llm: %v", err)
 	}

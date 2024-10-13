@@ -23,6 +23,19 @@
         let assistantName = getAssistantName(llmProvider, modelName);
         let shouldAutoScroll = true;
 
+        // Função alternativa para gerar UUID
+        function generateUUID() {
+            let d = new Date().getTime();
+            if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+                d += performance.now(); // Use high-precision timer if available
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = (d + Math.random() * 16) % 16 | 0;
+                d = Math.floor(d / 16);
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+        }
+
         // Inicialização
         initialize();
 
@@ -60,7 +73,7 @@
             llmProviderSelect.addEventListener('change', handleProviderChange);
             chatForm.addEventListener('submit', handleFormSubmit);
             userInput.addEventListener('keydown', handleUserInputKeyDown);
-            userInput.addEventListener('input', autoResizeTextarea);
+            userInput.addEventListener('input', debounce(autoResizeTextarea, 50));
             messagesDiv.addEventListener('scroll', throttle(handleMessagesScroll, 100));
             clearHistoryButton.addEventListener('click', clearChatHistory);
             newChatButton.addEventListener('click', handleNewChat);
@@ -126,13 +139,27 @@
             }
         }
 
+        // Função para disparar o evento de submit de forma compatível
+        function triggerSubmitEvent() {
+            if (typeof Event === 'function') {
+                // Compatível com navegadores modernos
+                const event = new Event('submit', { cancelable: true });
+                chatForm.dispatchEvent(event);
+            } else {
+                // Fallback para navegadores antigos
+                const event = document.createEvent('Event');
+                event.initEvent('submit', true, true);
+                chatForm.dispatchEvent(event);
+            }
+        }
+
         // Manipulador para a tecla pressionada no campo de entrada do usuário
         function handleUserInputKeyDown(e) {
             if (e.key === 'Enter') {
                 if (!e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey) {
                     // Se Enter é pressionado sem modificadores, envie a mensagem
                     e.preventDefault(); // Impede a inserção de uma nova linha
-                    chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+                    triggerSubmitEvent();
                 }
                 // Se Shift+Enter, permite a inserção de uma nova linha
             }
@@ -142,6 +169,15 @@
         function autoResizeTextarea() {
             this.style.height = 'auto';
             this.style.height = this.scrollHeight + 'px';
+        }
+
+        // Debounce para limitar a frequência de execução de funções
+        function debounce(fn, delay) {
+            let timeoutID;
+            return function (...args) {
+                clearTimeout(timeoutID);
+                timeoutID = setTimeout(() => fn.apply(this, args), delay);
+            };
         }
 
         // Manipulador para o evento de scroll nas mensagens
@@ -154,12 +190,22 @@
         }
 
         // Throttle para limitar a frequência de execução de funções
-        function throttle(fn, wait) {
-            let time = Date.now();
-            return function () {
-                if ((time + wait - Date.now()) < 0) {
-                    fn.call(this);
-                    time = Date.now();
+        function throttle(func, limit) {
+            let lastFunc;
+            let lastRan;
+            return function (...args) {
+                const context = this;
+                if (!lastRan) {
+                    func.apply(context, args);
+                    lastRan = Date.now();
+                } else {
+                    clearTimeout(lastFunc);
+                    lastFunc = setTimeout(function () {
+                        if ((Date.now() - lastRan) >= limit) {
+                            func.apply(context, args);
+                            lastRan = Date.now();
+                        }
+                    }, limit - (Date.now() - lastRan));
                 }
             };
         }
@@ -200,7 +246,7 @@
 
                     // Destaque de sintaxe
                     contentElement.querySelectorAll('pre code').forEach((block) => {
-                        if (hljs) {
+                        if (typeof hljs !== 'undefined') {
                             hljs.highlightElement(block);
                         }
                     });
@@ -240,7 +286,7 @@
 
                         // Destaque de sintaxe
                         element.querySelectorAll('pre code').forEach((block) => {
-                            if (hljs) {
+                            if (typeof hljs !== 'undefined') {
                                 hljs.highlightElement(block);
                             }
                         });
@@ -305,7 +351,7 @@
             } catch (error) {
                 console.error("Erro ao enviar mensagem:", error);
                 removeLastMessage();
-                addMessage('Erro', error.message, false, true);
+                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente.', false, true);
             }
         }
 
@@ -385,7 +431,7 @@
                 editButton.textContent = '✏️';
                 editButton.title = 'Renomear conversa';
 
-                editButton.addEventListener('click', (e) => {
+                editButton.addEventListener('click', function (e) {
                     e.stopPropagation();
                     const newName = prompt("Digite o novo nome para a conversa:", chat.name || `Conversa ${index + 1}`);
                     if (newName) {
@@ -398,7 +444,7 @@
                 deleteButton.textContent = '🗑️';
                 deleteButton.title = 'Apagar conversa';
 
-                deleteButton.addEventListener('click', (e) => {
+                deleteButton.addEventListener('click', function (e) {
                     e.stopPropagation();
                     const confirmDelete = confirm(`Tem certeza que deseja apagar a conversa "${chat.name || `Conversa ${index + 1}`}"?`);
                     if (confirmDelete) {
@@ -411,7 +457,7 @@
                 chatItem.appendChild(deleteButton);
 
                 chatItem.dataset.id = chat.id;
-                chatItem.addEventListener('click', () => {
+                chatItem.addEventListener('click', function () {
                     currentChatID = chat.id;
                     loadChatHistory();
                 });
@@ -455,7 +501,7 @@
 
         // Cria um novo chat e atualiza a lista de chats
         function createNewChat() {
-            const newChatID = crypto.randomUUID();
+            const newChatID = generateUUID();
             const chatList = JSON.parse(localStorage.getItem('chatList')) || [];
 
             const chatName = `Conversa ${chatList.length + 1}`;
