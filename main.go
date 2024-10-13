@@ -44,6 +44,6 @@ func main() {
 	http.HandleFunc("/change-provider", handlers.ChangeProviderHandler(manager))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	fmt.Println("Servidor iniciado na porta 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Servidor iniciado na porta 5000")
+	log.Fatal(http.ListenAndServe(":5000", nil))
 }
