@@ -7,6 +7,7 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
 - [Funcionalidades](#funcionalidades)
 - [Pré-requisitos](#pré-requisitos)
 - [Instalação e Configuração](#instalação-e-configuração)
+  - [4.5. Configurar o Ambiente de Execução](#45-configurar-o-ambiente-de-execução)
 - [Uso](#uso)
 - [Integração com a StackSpot AI e OpenAI](#integração-com-a-stackspot-ai-e-openai)
   - [Provedores de LLM](#provedores-de-llm)
@@ -15,6 +16,7 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
   - [Agentes Especializados (StackSpot AI)](#agentes-especializados-stackspot-ai)
   - [Manutenção de Contexto (OpenAI)](#manutenção-de-contexto-openai)
 - [Detalhes Técnicos](#detalhes-técnicos)
+  - [Segurança e Força de HTTPS](#segurança-e-força-de-https)
 - [Resolução de Problemas](#resolução-de-problemas)
 - [Contribuição](#contribuição)
 - [Licença](#licença)
@@ -101,7 +103,31 @@ export OPENAI_MODEL=gpt-4  # ou gpt-3.5-turbo
 go mod tidy
 ```
 
-### 5. Execute o Servidor Backend
+### 5. Configurar o Ambiente de Execução
+
+O aplicativo utiliza uma variável de ambiente `ENV` para determinar o ambiente de execução. Isso permite que o middleware de força de HTTPS seja aplicado apenas em produção, evitando problemas durante o desenvolvimento local.
+
+#### Definição da Variável `ENV`
+
+- **Para Desenvolvimento Local:**
+
+  Defina `ENV` como `dev`. Isso desabilita o redirecionamento para HTTPS, permitindo que você teste a aplicação localmente sem certificados SSL.
+
+  ```bash
+  export ENV=dev
+  ```
+
+- **Para Produção (Heroku):**
+
+  Defina `ENV` como `prod`. Isso ativa o middleware que força todas as requisições a utilizarem HTTPS.
+
+  ```bash
+  heroku config:set ENV=prod
+  ```
+
+**Nota:** Assegure-se de definir a variável `ENV` corretamente no seu ambiente para evitar redirecionamentos indesejados durante o desenvolvimento.
+
+### 6. Execute o Servidor Backend
 
 ```bash
 go run main.go
@@ -109,7 +135,7 @@ go run main.go
 
 O servidor iniciará na porta `8080` por padrão.
 
-### 6. Acesse o Aplicativo no Navegador
+### 7. Acesse o Aplicativo no Navegador
 
 Abra o navegador e visite:
 
@@ -185,8 +211,8 @@ Você pode selecionar o provedor de Modelo de Linguagem (LLM) via variável de a
 - **O que são:** Comandos pré-configurados que permitem executar tarefas ou obter informações rapidamente através da IA.
 - **Uso no Aplicativo:** O aplicativo utiliza comandos rápidos para processar certos tipos de solicitações de maneira eficiente, como executar ações específicas ou obter respostas padronizadas.
 - **Exemplos de Comandos:**
-    - `explain-code`: Solicita à IA que explique um trecho de código fornecido.
-    - Comandos personalizados: Você pode criar seus próprios comandos rápidos na StackSpot AI e usá-los via a variável de ambiente `SLUG_NAME`.
+  - `explain-code`: Solicita à IA que explique um trecho de código fornecido.
+  - Comandos personalizados: Você pode criar seus próprios comandos rápidos na StackSpot AI e usá-los via a variável de ambiente `SLUG_NAME`.
 
 ### Agentes Especializados (StackSpot AI)
 
@@ -215,23 +241,35 @@ Você pode selecionar o provedor de Modelo de Linguagem (LLM) via variável de a
 - **Interface LLMClient:** Define o contrato que todas as implementações de LLM devem seguir, permitindo uma maneira consistente de interagir com diferentes provedores.
 - **Manutenção de Contexto:** O aplicativo mantém o contexto da conversa ao usar a OpenAI, enviando o histórico completo da conversa a cada solicitação.
 
+### Segurança e Força de HTTPS
+
+Para garantir a segurança das comunicações, o aplicativo implementa um middleware que força todas as requisições a utilizarem HTTPS. Esse redirecionamento é aplicado **apenas** no ambiente de produção, conforme determinado pela variável de ambiente `ENV`.
+
+- **Middleware `ForceHTTPSMiddleware`:** Verifica o cabeçalho `X-Forwarded-Proto` para determinar se a requisição original foi feita via HTTPS. Se não for, redireciona para a versão HTTPS da mesma URL.
+- **Variável de Ambiente `ENV`:** Controla a aplicação do middleware. Definida como `prod` na Heroku e `dev` localmente.
+
+**Implementação:**
+
+- **Arquivo `middleware.go`:** Contém a implementação do middleware.
+- **Arquivo `main.go`:** Aplica o middleware condicionalmente com base na variável `ENV`.
+
 ### Frontend
 
 - **HTML5 e CSS3:** Estrutura semântica e estilos responsivos.
 - **JavaScript (ES6+):** Manipulação do DOM e lógica do aplicativo.
 - **Bibliotecas Utilizadas:**
-    - **Marked.js:** Renderização de Markdown para HTML.
-    - **DOMPurify:** Sanitização do HTML gerado para evitar ataques XSS.
-    - **Highlight.js:** Realce de sintaxe em trechos de código.
+  - **Marked.js:** Renderização de Markdown para HTML.
+  - **DOMPurify:** Sanitização do HTML gerado para evitar ataques XSS.
+  - **Highlight.js:** Realce de sintaxe em trechos de código.
 
 ### Backend
 
 - **Go (`main.go`):** Servidor HTTP que lida com as requisições do frontend e se comunica com o provedor de LLM.
 - **Integração com Provedores de LLM:**
-    - **Autenticação:** Utiliza as chaves de API configuradas para autenticação.
-    - **Manipulação de Requisições:** Structs e métodos definidos para serializar e deserializar dados JSON trocados com as APIs.
-    - **Rotas Implementadas:**
-        - **`/send`:** Endpoint POST que recebe mensagens do frontend, encaminha para o provedor de LLM e retorna a resposta.
+  - **Autenticação:** Utiliza as chaves de API configuradas para autenticação.
+  - **Manipulação de Requisições:** Structs e métodos definidos para serializar e deserializar dados JSON trocados com as APIs.
+  - **Rotas Implementadas:**
+    - **`/send`:** Endpoint POST que recebe mensagens do frontend, encaminha para o provedor de LLM e retorna a resposta.
 - **Concorrência e Tratamento de Erros:** Manipulação adequada de requisições HTTP, timeouts e relatórios de erros para garantir um aplicativo robusto.
 
 ### Armazenamento
@@ -265,35 +303,35 @@ Você pode selecionar o provedor de Modelo de Linguagem (LLM) via variável de a
 
 - **Sintomas:** Recebe erros de autenticação ao tentar se comunicar com a API.
 - **Soluções:**
-    - Verifique se as chaves de API (`CLIENT_ID`, `CLIENT_SECRET`, `OPENAI_API_KEY`) estão configuradas corretamente.
-    - Certifique-se de que as variáveis de ambiente estão definidas e acessíveis para o aplicativo.
-    - Confirme se as chaves de API têm as permissões necessárias para acessar os serviços utilizados.
-    - Para StackSpot AI, certifique-se de que a URL de token e o tenant estão corretamente configurados na função `refreshToken`.
-    - Para OpenAI, certifique-se de que sua conta tem acesso ao modelo especificado (por exemplo, o `gpt-4` pode exigir permissões especiais).
+  - Verifique se as chaves de API (`CLIENT_ID`, `CLIENT_SECRET`, `OPENAI_API_KEY`) estão configuradas corretamente.
+  - Certifique-se de que as variáveis de ambiente estão definidas e acessíveis para o aplicativo.
+  - Confirme se as chaves de API têm as permissões necessárias para acessar os serviços utilizados.
+  - Para StackSpot AI, certifique-se de que a URL de token e o tenant estão corretamente configurados na função `refreshToken`.
+  - Para OpenAI, certifique-se de que sua conta tem acesso ao modelo especificado (por exemplo, o `gpt-4` pode exigir permissões especiais).
 
 ### Contexto Não Mantido nas Conversas
 
 - **Sintomas:** A IA não lembra mensagens anteriores e trata cada mensagem de forma independente.
 - **Soluções:**
-    - Certifique-se de que o aplicativo está enviando corretamente o histórico da conversa para o provedor de LLM.
-    - Para OpenAI, verifique se o método `SendPrompt` inclui o parâmetro `history` e se a requisição à API inclui o histórico completo da conversa.
-    - Confirme que você está usando um modelo da OpenAI que suporta contexto (por exemplo, `gpt-3.5-turbo`, `gpt-4`).
+  - Certifique-se de que o aplicativo está enviando corretamente o histórico da conversa para o provedor de LLM.
+  - Para OpenAI, verifique se o método `SendPrompt` inclui o parâmetro `history` e se a requisição à API inclui o histórico completo da conversa.
+  - Confirme que você está usando um modelo da OpenAI que suporta contexto (por exemplo, `gpt-3.5-turbo`, `gpt-4`).
 
 ### Comandos Rápidos ou Agentes Não Funcionam (StackSpot AI)
 
 - **Sintomas:** As respostas da IA não correspondem aos comandos ou agentes esperados.
 - **Soluções:**
-    - Certifique-se de que os comandos rápidos e agentes estão configurados corretamente na plataforma StackSpot AI.
-    - Verifique se o aplicativo está enviando o `SLUG_NAME` correto e se ele corresponde ao comando rápido ou agente configurado.
-    - Consulte a documentação da StackSpot AI para detalhes sobre como utilizar comandos rápidos e agentes.
+  - Certifique-se de que os comandos rápidos e agentes estão configurados corretamente na plataforma StackSpot AI.
+  - Verifique se o aplicativo está enviando o `SLUG_NAME` correto e se ele corresponde ao comando rápido ou agente configurado.
+  - Consulte a documentação da StackSpot AI para detalhes sobre como utilizar comandos rápidos e agentes.
 
 ### Outros Problemas Relacionados à Interface
 
 - **Sintomas:** Problemas com a interface do usuário, como mensagens não sendo exibidas corretamente.
 - **Soluções:**
-    - Certifique-se de que todas as dependências do frontend estão sendo carregadas corretamente.
-    - Verifique o console do navegador em busca de erros JavaScript.
-    - Confirme se o servidor está em execução e acessível.
+  - Certifique-se de que todas as dependências do frontend estão sendo carregadas corretamente.
+  - Verifique o console do navegador em busca de erros JavaScript.
+  - Confirme se o servidor está em execução e acessível.
 
 ## Contribuição
 
@@ -357,14 +395,14 @@ Agradecemos à **StackSpot AI** e à **OpenAI** por fornecerem as ferramentas e 
 ## Referências
 
 - **Documentação da StackSpot AI:**
-    - [StackSpot AI - Visão Geral](https://ai.stackspot.com/docs)
-    - [Fontes de Conhecimento](https://ai.stackspot.com/docs/pt-br/knowledge-source/ks)
-    - [Agentes Especializados](https://ai.stackspot.com/docs/pt-br/agents/create-agents)
-    - [Comandos Rápidos](https://ai.stackspot.com/docs/pt-br/quick-commands/quick-command)
+  - [StackSpot AI - Visão Geral](https://ai.stackspot.com/docs)
+  - [Fontes de Conhecimento](https://ai.stackspot.com/docs/pt-br/knowledge-source/ks)
+  - [Agentes Especializados](https://ai.stackspot.com/docs/pt-br/agents/create-agents)
+  - [Comandos Rápidos](https://ai.stackspot.com/docs/pt-br/quick-commands/quick-command)
 - **Documentação da OpenAI:**
-    - [Referência da API OpenAI](https://platform.openai.com/docs/api-reference/introduction)
-    - [API de Conclusão de Chat](https://platform.openai.com/docs/api-reference/chat)
-    - [Modelos Disponíveis](https://platform.openai.com/docs/models/overview)
+  - [Referência da API OpenAI](https://platform.openai.com/docs/api-reference/introduction)
+  - [API de Conclusão de Chat](https://platform.openai.com/docs/api-reference/chat)
+  - [Modelos Disponíveis](https://platform.openai.com/docs/models/overview)
 
 **Nota:** As referências acima são importantes para entender como configurar e utilizar os recursos integrados neste aplicativo.
 
