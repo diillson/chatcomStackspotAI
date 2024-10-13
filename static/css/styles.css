@@ -234,7 +234,7 @@ body {
 #chat-form button,
 #chat-form select {
     flex: 1;
-    padding: 0.75em 1em;
+    padding: 0.30em 1em;
     font-size: 1rem;
     cursor: pointer;
     border-radius: 4px;
@@ -419,8 +419,8 @@ body {
 
     /* Botão de Toggle Sidebar */
     .toggle-sidebar {
-        font-size: 1.5rem;
-        padding: 0.5em;
+        font-size: 1.0rem;
+        padding: 0.5em 0.75em;
     }
 }
 
@@ -443,8 +443,8 @@ body {
 
     /* Botão de Toggle Sidebar */
     .toggle-sidebar {
-        font-size: 1.8rem;
-        padding: 0.75em;
+        font-size: 1.0rem;
+        padding: 0.5em 0.75em;
     }
 }
 
