@@ -2,6 +2,7 @@
 package middlewares
 
 import (
+	"log"
 	"net/http"
 	"os"
 )
@@ -10,6 +11,8 @@ import (
 func ForceHTTPSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		env := os.Getenv("ENV")
+		log.Printf("Recebendo requisição de %s %s %s", r.RemoteAddr, r.Method, r.URL.Path)
+
 		if env != "production" {
 			// Não forçar HTTPS em ambientes não-producao
 			next.ServeHTTP(w, r)
@@ -20,6 +23,7 @@ func ForceHTTPSMiddleware(next http.Handler) http.Handler {
 		if r.Header.Get("X-Forwarded-Proto") != "https" {
 			// Constrói a URL de redirecionamento para HTTPS
 			target := "https://" + r.Host + r.URL.RequestURI()
+			log.Printf("Redirecionando para HTTPS: %s", target)
 			http.Redirect(w, r, target, http.StatusMovedPermanently)
 			return
 		}
