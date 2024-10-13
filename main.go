@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 )
 
@@ -34,6 +35,11 @@ func indexHandler(manager *llm.LLMManager) http.HandlerFunc {
 }
 
 func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	manager, err := llm.NewLLMManager()
 	if err != nil {
 		log.Fatalf("Erro ao inicializar o LLMManager: %v", err)
@@ -44,6 +50,8 @@ func main() {
 	http.HandleFunc("/change-provider", handlers.ChangeProviderHandler(manager))
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	fmt.Println("Servidor iniciado na porta 5000")
-	log.Fatal(http.ListenAndServe(":5000", nil))
+	fmt.Println("Servidor iniciado na porta %s...", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("Erro ao carregar o llm: %v", err)
+	}
 }
