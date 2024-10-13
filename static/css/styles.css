@@ -31,11 +31,15 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    transition: flex-basis 0.3s ease;
+    transition: flex-basis 0.3s ease, left 0.3s ease;
+    position: relative; /* Adicionado para dispositivos móveis */
 }
 
+/* Ocultar a sidebar quando a classe 'hidden' estiver presente */
 #sidebar.hidden {
     flex-basis: 0;
+    width: 0;
+    overflow: hidden;
 }
 
 #sidebar.hidden ~ #chat-container {
@@ -135,7 +139,6 @@ body {
     flex-direction: column;
     overflow: hidden;
     background-color: #fff;
-    /* Removido border-radius e box-shadow para manter o estilo original */
 }
 
 /* 9. Área de Mensagens */
@@ -180,7 +183,7 @@ body {
     border-color: #007bff;
 }
 
-/* Opcional: remover a borda de redimensionamento no canto */
+/* Remover a borda de redimensionamento no canto */
 #user-input::-webkit-resizer {
     display: none;
 }
@@ -239,7 +242,6 @@ body {
 .message strong {
     color: #333;
     font-weight: bold;
-    /* Removido display: block e margin-bottom para evitar nova linha */
 }
 
 .message p {
@@ -331,72 +333,88 @@ body {
     }
 }
 
-/* Ajustes para telas entre 768px e 576px */
+/* Ajustes para telas menores que 768px */
 @media (max-width: 768px) {
     html {
         font-size: 13px;
-
-        /* Esconder a sidebar em telas pequenas */
-
-        #sidebar {
-            display: none;
-        }
-
-        /* Expandir o chat-container para ocupar toda a largura */
-
-        #chat-container {
-            flex: 1;
-        }
-
-        /* Ajustar o botão de toggle da sidebar */
-
-        .toggle-sidebar {
-            display: none;
-        }
-
-        /* Ajustar o formulário de chat */
-
-        #chat-form {
-            flex-wrap: wrap;
-        }
-
-        #user-input {
-            flex: 1 1 100%;
-            margin-bottom: 10px;
-        }
-
-        #chat-form button,
-        #llm-provider-select {
-            flex: 1 1 calc(50% - 10px);
-            margin-bottom: 10px;
-        }
-
-        #messages {
-            padding: 15px;
-            font-size: 1rem;
-        }
     }
 
-    /* Ajustes para telas menores que 576px */
-    @media (max-width: 576px) {
-        html {
-            font-size: 12px;
-        }
+    /* Ajustar a sidebar para dispositivos móveis */
+    #sidebar {
+        position: fixed;
+        left: -250px; /* Esconder a sidebar para a esquerda */
+        top: 0;
+        width: 250px;
+        height: 100%;
+        background-color: #f0f0f0;
+        transition: left 0.3s ease;
+        z-index: 1000;
+        overflow-y: auto;
+    }
 
-        /* Ajustes adicionais para dispositivos móveis */
-        #messages {
-            padding: 10px;
-            font-size: 0.9rem;
-        }
+    /* Quando a sidebar estiver visível */
+    #sidebar.visible {
+        left: 0; /* Mostrar a sidebar */
+    }
 
-        #user-input {
-            min-height: 80px;
-        }
+    /* Ajustar o chat-container */
+    #chat-container {
+        flex: 1;
+        margin-left: 0;
+    }
 
-        #chat-form button,
-        #llm-provider-select {
-            flex: 1 1 100%;
-            margin-bottom: 10px;
-        }
+    /* Manter o botão de toggle da sidebar visível */
+    .toggle-sidebar {
+        display: block;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        z-index: 1001;
+        font-size: 1.5rem;
+    }
+
+    /* Ajustar o formulário de chat */
+    #chat-form {
+        flex-wrap: wrap;
+    }
+
+    #user-input {
+        flex: 1 1 100%;
+        margin-bottom: 10px;
+    }
+
+    #chat-form button,
+    #llm-provider-select {
+        flex: 1 1 calc(50% - 10px);
+        margin-bottom: 10px;
+    }
+
+    #messages {
+        padding: 15px;
+        font-size: 1rem;
+    }
+}
+
+/* Ajustes para telas menores que 576px */
+@media (max-width: 576px) {
+    html {
+        font-size: 12px;
+    }
+
+    /* Ajustes adicionais para dispositivos móveis */
+    #chat-form button,
+    #llm-provider-select {
+        flex: 1 1 100%;
+        margin-bottom: 10px;
+    }
+
+    #user-input {
+        min-height: 80px;
     }
 }

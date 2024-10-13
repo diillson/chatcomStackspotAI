@@ -218,8 +218,13 @@
 
         // Alterna a visibilidade da barra lateral
         function toggleSidebar() {
-            sidebar.classList.toggle('hidden');
-            toggleSidebarButton.textContent = sidebar.classList.contains('hidden') ? '➡' : '⬅';
+            if (sidebar.classList.contains('visible')) {
+                sidebar.classList.remove('visible');
+                toggleSidebarButton.textContent = '☰'; // Ícone de menu
+            } else {
+                sidebar.classList.add('visible');
+                toggleSidebarButton.textContent = '✕'; // Ícone de fechar
+            }
         }
 
         // Função para adicionar uma mensagem ao chat
