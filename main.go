@@ -1,9 +1,12 @@
+// main.go
 package main
 
 import (
 	"fmt"
 	"github.com/chatcomStackspotAI/handlers"
 	"github.com/chatcomStackspotAI/llm"
+	"github.com/chatcomStackspotAI/middlewares"
+	"github.com/joho/godotenv"
 	"html/template"
 	"log"
 	"net/http"
@@ -35,6 +38,12 @@ func indexHandler(manager *llm.LLMManager) http.HandlerFunc {
 }
 
 func main() {
+	// Carrega variáveis de ambiente do arquivo .env, se existir
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Nenhum arquivo .env encontrado")
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -45,13 +54,18 @@ func main() {
 		log.Fatalf("Erro ao inicializar o LLMManager: %v", err)
 	}
 
-	http.HandleFunc("/", indexHandler(manager))
-	http.HandleFunc("/send", handlers.SendMessageHandler(manager))
-	http.HandleFunc("/change-provider", handlers.ChangeProviderHandler(manager))
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	// Cria um novo mux para aplicar o middleware
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", indexHandler(manager))
+	mux.HandleFunc("/send", handlers.SendMessageHandler(manager))
+	mux.HandleFunc("/change-provider", handlers.ChangeProviderHandler(manager))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
+	// Envolve o mux com o middleware ForceHTTPSMiddleware
+	finalHandler := middlewares.ForceHTTPSMiddleware(mux)
 
 	fmt.Println("Servidor iniciado na porta " + port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatalf("Erro ao carregar o llm: %v", err)
+	if err := http.ListenAndServe(":"+port, finalHandler); err != nil {
+		log.Fatalf("Erro ao iniciar o servidor: %v", err)
 	}
 }
