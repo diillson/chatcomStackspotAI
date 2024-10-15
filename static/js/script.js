@@ -20,6 +20,9 @@
         const llmProvider = document.body.dataset.llmProvider;
         const modelName = document.body.dataset.modelName;
 
+        // Elemento para o Highlight.js
+        const highlightStyleLink = document.getElementById('highlight-style');
+
         // Estado do aplicativo
         let currentChatID = null;
         let assistantName = getAssistantName(llmProvider, modelName);
@@ -80,6 +83,13 @@
             clearHistoryButton.addEventListener('click', clearChatHistory);
             newChatButton.addEventListener('click', handleNewChat);
             toggleSidebarButton.addEventListener('click', toggleSidebar);
+
+            // Adiciona o event listener para o botão de alternância de tema
+            const toggleThemeButton = document.getElementById('toggle-theme');
+            toggleThemeButton.addEventListener('click', toggleTheme);
+
+            // Carrega o tema preferido do usuário
+            loadUserTheme();
         }
 
         // Obtém o nome do assistente com base no provedor e modelo
@@ -223,12 +233,12 @@
             if (sidebar.classList.contains('visible')) {
                 sidebar.classList.remove('visible');
                 sidebar.classList.add('hidden');
-                toggleSidebarButton.textContent = '☰'; // Ícone de menu
+                toggleSidebarButton.innerHTML = '<i class="fas fa-bars"></i>'; // Ícone de menu
                 toggleSidebarButton.setAttribute('aria-label', 'Mostrar barra lateral');
             } else {
                 sidebar.classList.remove('hidden');
                 sidebar.classList.add('visible');
-                toggleSidebarButton.textContent = '✕'; // Ícone de fechar
+                toggleSidebarButton.innerHTML = '<i class="fas fa-times"></i>'; // Ícone de fechar
                 toggleSidebarButton.setAttribute('aria-label', 'Ocultar barra lateral');
             }
         }
@@ -256,11 +266,8 @@
                     contentElement.innerHTML = cleanHtml;
 
                     // Destaque de sintaxe
-                    contentElement.querySelectorAll('pre code').forEach((block) => {
-                        if (typeof hljs !== 'undefined') {
-                            hljs.highlightElement(block);
-                        }
-                    });
+                    elementHighlight();
+
                 } else {
                     const cleanHtml = DOMPurify.sanitize(text);
                     contentElement.innerHTML = cleanHtml;
@@ -273,6 +280,13 @@
 
             if (shouldAutoScroll) {
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        }
+
+        // Função para destacar a sintaxe após adicionar conteúdo
+        function elementHighlight() {
+            if (typeof hljs !== 'undefined') {
+                hljs.highlightAll();
             }
         }
 
@@ -296,11 +310,7 @@
                         element.innerHTML = cleanHtml;
 
                         // Destaque de sintaxe
-                        element.querySelectorAll('pre code').forEach((block) => {
-                            if (typeof hljs !== 'undefined') {
-                                hljs.highlightElement(block);
-                            }
-                        });
+                        elementHighlight();
                     } else {
                         element.textContent = previousText;
                     }
@@ -439,7 +449,7 @@
 
                 const editButton = document.createElement('button');
                 editButton.classList.add('edit-chat-name');
-                editButton.textContent = '✏️';
+                editButton.innerHTML = '<i class="fas fa-edit"></i>';
                 editButton.title = 'Renomear conversa';
 
                 editButton.addEventListener('click', function (e) {
@@ -452,7 +462,7 @@
 
                 const deleteButton = document.createElement('button');
                 deleteButton.classList.add('delete-chat');
-                deleteButton.textContent = '🗑️';
+                deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
                 deleteButton.title = 'Apagar conversa';
 
                 deleteButton.addEventListener('click', function (e) {
@@ -523,5 +533,51 @@
             loadChatList();
             return newChatID;
         }
+
+        /* Funções de Alternância de Tema */
+
+        // Função para alternar entre os temas
+        function toggleTheme() {
+            const toggleThemeButton = document.getElementById('toggle-theme');
+            document.body.classList.toggle('dark-mode');
+
+            if (document.body.classList.contains('dark-mode')) {
+                toggleThemeButton.innerHTML = '<i class="fas fa-sun"></i>'; // Ícone para modo Light
+                toggleThemeButton.setAttribute('aria-label', 'Ativar modo Light');
+                localStorage.setItem('theme', 'dark');
+
+                // Alterar o tema do Highlight.js para escuro
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css";
+            } else {
+                toggleThemeButton.innerHTML = '<i class="fas fa-moon"></i>'; // Ícone para modo Dark
+                toggleThemeButton.setAttribute('aria-label', 'Ativar modo Dark');
+                localStorage.setItem('theme', 'light');
+
+                // Alterar o tema do Highlight.js para claro
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css";
+            }
+        }
+
+        // Função para carregar o tema preferido do usuário
+        function loadUserTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const toggleThemeButton = document.getElementById('toggle-theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                toggleThemeButton.innerHTML = '<i class="fas fa-sun"></i>'; // Ícone para modo Light
+                toggleThemeButton.setAttribute('aria-label', 'Ativar modo Light');
+
+                // Definir o tema do Highlight.js para escuro
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css";
+            } else {
+                document.body.classList.remove('dark-mode');
+                toggleThemeButton.innerHTML = '<i class="fas fa-moon"></i>'; // Ícone para modo Dark
+                toggleThemeButton.setAttribute('aria-label', 'Ativar modo Dark');
+
+                // Definir o tema do Highlight.js para claro
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css";
+            }
+        }
+
     })();
 })();
