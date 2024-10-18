@@ -581,14 +581,14 @@
                 localStorage.setItem('theme', 'dark');
 
                 // Alterar o tema do Highlight.js para escuro
-                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css" + new Date().getTime();
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css?v=" + new Date().getTime();
             } else {
                 toggleThemeButton.innerHTML = '<i class="fas fa-moon"></i>'; // Ícone para modo Dark
                 toggleThemeButton.setAttribute('aria-label', 'Ativar modo Dark');
                 localStorage.setItem('theme', 'light');
 
                 // Alterar o tema do Highlight.js para claro
-                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai-sublime.min.css" + new Date().getTime();
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai-sublime.min.css?v=" + new Date().getTime();
             }
         }
 
