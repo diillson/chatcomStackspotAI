@@ -62,6 +62,9 @@
                 console.error("hljs não está definido. Verifique a inclusão da biblioteca.");
             }
 
+            // carrega o tema do usuario
+            loadUserTheme();
+
             // Carregar a lista de chats
             loadChatList();
 
@@ -567,43 +570,55 @@
             const toggleThemeButton = document.getElementById('toggle-theme');
             document.body.classList.toggle('dark-mode');
 
+            // Definir o manipulador de evento onload antes de alterar o href
+            highlightStyleLink.onload = function() {
+                hljs.highlightAll();
+            };
+
             if (document.body.classList.contains('dark-mode')) {
                 toggleThemeButton.innerHTML = '<i class="fas fa-sun"></i>'; // Ícone para modo Light
                 toggleThemeButton.setAttribute('aria-label', 'Ativar modo Light');
                 localStorage.setItem('theme', 'dark');
 
                 // Alterar o tema do Highlight.js para escuro
-                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css";
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css" + new Date().getTime();
             } else {
                 toggleThemeButton.innerHTML = '<i class="fas fa-moon"></i>'; // Ícone para modo Dark
                 toggleThemeButton.setAttribute('aria-label', 'Ativar modo Dark');
                 localStorage.setItem('theme', 'light');
 
                 // Alterar o tema do Highlight.js para claro
-                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css";
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai-sublime.min.css" + new Date().getTime();
             }
         }
+
 
         // Função para carregar o tema preferido do usuário
         function loadUserTheme() {
             const savedTheme = localStorage.getItem('theme');
             const toggleThemeButton = document.getElementById('toggle-theme');
+
+            // Definir o manipulador de evento onload antes de alterar o href
+            highlightStyleLink.onload = function() {
+                hljs.highlightAll();
+            };
+
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
                 toggleThemeButton.innerHTML = '<i class="fas fa-sun"></i>'; // Ícone para modo Light
                 toggleThemeButton.setAttribute('aria-label', 'Ativar modo Light');
 
                 // Definir o tema do Highlight.js para escuro
-                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css";
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css?v=" + new Date().getTime();
             } else {
                 document.body.classList.remove('dark-mode');
                 toggleThemeButton.innerHTML = '<i class="fas fa-moon"></i>'; // Ícone para modo Dark
                 toggleThemeButton.setAttribute('aria-label', 'Ativar modo Dark');
 
                 // Definir o tema do Highlight.js para claro
-                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css";
+                highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai-sublime.min.css?v=" + new Date().getTime();
             }
         }
-    })
+    });
 })();
 
