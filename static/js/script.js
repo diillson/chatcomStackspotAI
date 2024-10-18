@@ -576,6 +576,71 @@
             }
         }
 
+        async function sendMessageToServer(message) {
+            try {
+                const conversationHistory = getConversationHistory();
+                const provider = localStorage.getItem('llmProvider') || 'STACKSPOT';
+
+                // Adicionar indicador de carregamento
+                addMessage(assistantName, 'Pensando<span class="dots">...</span>', false, false, false);
+
+                const response = await fetch('/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: provider,
+                        prompt: message,
+                        history: conversationHistory
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+
+                const data = await response.json();
+                const messageID = data.message_id;
+
+                // Inicia o polling para obter a resposta
+                pollForResponse(messageID);
+            } catch (error) {
+                console.error("Erro ao enviar mensagem:", error);
+                removeLastMessage();
+                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente. ' + error, false, true);
+            }
+        }
+
+        async function pollForResponse(messageID) {
+            try {
+                const response = await fetch(`/get-response?message_id=${messageID}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'completed') {
+                    removeLastMessage();
+                    addMessage(assistantName, data.response, true, true, true);
+                } else if (data.status === 'processing') {
+                    // Aguarda antes de fazer a próxima verificação
+                    setTimeout(() => {
+                        pollForResponse(messageID);
+                    }, 1000); // Intervalo de 1 segundo
+                } else if (data.status === 'error') {
+                    removeLastMessage();
+                    addMessage('Erro', data.message, false, true);
+                }
+            } catch (error) {
+                console.error("Erro ao obter a resposta:", error);
+                removeLastMessage();
+                addMessage('Erro', 'Ocorreu um erro ao obter a resposta. Por favor, tente novamente. ' + error, false, true);
+            }
+        }
+
+
     })();
 })();
 

@@ -96,7 +96,7 @@ func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (s
 // Implementação das funções auxiliares com retry
 
 func (c *StackSpotClient) sendRequestToLLMWithRetry(prompt, accessToken string) (string, error) {
-	maxAttempts := 6
+	maxAttempts := 3
 	backoff := time.Second
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
@@ -119,7 +119,7 @@ func (c *StackSpotClient) sendRequestToLLMWithRetry(prompt, accessToken string) 
 }
 
 func (c *StackSpotClient) getLLMResponseWithRetry(responseID, accessToken string) (string, error) {
-	maxAttempts := 6
+	maxAttempts := 3
 	backoff := time.Second
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {

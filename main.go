@@ -27,7 +27,7 @@ func indexHandler() http.HandlerFunc {
 }
 
 func main() {
-	// Carrega variáveis de ambiente do arquivo .env, se existir
+	// Carrega variáveis de ambiente
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Nenhum arquivo .env encontrado")
@@ -43,13 +43,15 @@ func main() {
 		log.Fatalf("Erro ao inicializar o LLMManager: %v", err)
 	}
 
-	// Cria um novo mux para aplicar o middleware
+	// Inicializa o ResponseStore
+	responseStore := handlers.NewResponseStore()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", indexHandler())
-	mux.HandleFunc("/send", handlers.SendMessageHandler(manager))
+	mux.HandleFunc("/send", handlers.SendMessageHandler(manager, responseStore))
+	mux.HandleFunc("/get-response", handlers.GetResponseHandler(responseStore))
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	// Envolve o mux com o middleware ForceHTTPSMiddleware
 	finalHandler := middlewares.ForceHTTPSMiddleware(mux)
 
 	fmt.Println("Servidor iniciado na porta " + port)
