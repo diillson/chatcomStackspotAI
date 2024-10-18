@@ -4,15 +4,11 @@ package llm
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"sync"
 )
 
 type LLMManager struct {
-	clients     map[string]LLMClient
-	currentProv string
-	mu          sync.RWMutex
+	clients map[string]LLMClient
 }
 
 func NewLLMManager() (*LLMManager, error) {
@@ -40,36 +36,13 @@ func NewLLMManager() (*LLMManager, error) {
 		manager.clients["OPENAI"] = NewOpenAIClient(apiKey, model)
 	}
 
-	// Definir o provedor atual (pode ser padrão ou lido de uma configuração)
-	manager.currentProv = os.Getenv("LLM_PROVIDER")
-	if manager.currentProv == "" {
-		manager.currentProv = "STACKSPOT" // ou outro padrão
-	}
-
 	return manager, nil
 }
 
-func (m *LLMManager) GetClient() (LLMClient, string, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	client, exists := m.clients[m.currentProv]
+func (m *LLMManager) GetClient(provider string) (LLMClient, error) {
+	client, exists := m.clients[provider]
 	if !exists {
-		return nil, "", fmt.Errorf("Provedor LLM '%s' não suportado ou não configurado", m.currentProv)
+		return nil, fmt.Errorf("Provedor LLM '%s' não suportado ou não configurado", provider)
 	}
-	return client, m.currentProv, nil
-}
-
-// Metodo para atualizar o provedor atual em tempo de execução
-func (m *LLMManager) SetCurrentProvider(provider string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if _, exists := m.clients[provider]; !exists {
-		log.Printf("Provedor LLM '%s' não suportado ou não configurado", provider)
-		return fmt.Errorf("Provedor LLM '%s' não suportado ou não configurado", provider)
-	}
-	m.currentProv = provider
-	log.Printf("Provedor LLM atualizado para '%s'", provider)
-	return nil
+	return client, nil
 }

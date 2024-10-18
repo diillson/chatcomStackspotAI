@@ -15,8 +15,9 @@ func SendMessageHandler(manager *llm.LLMManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			var data struct {
-				Prompt  string           `json:"prompt"`
-				History []models.Message `json:"history"`
+				Provider string           `json:"provider"`
+				Prompt   string           `json:"prompt"`
+				History  []models.Message `json:"history"`
 			}
 			err := json.NewDecoder(r.Body).Decode(&data)
 			if err != nil {
@@ -25,9 +26,9 @@ func SendMessageHandler(manager *llm.LLMManager) http.HandlerFunc {
 				return
 			}
 
-			client, _, err := manager.GetClient()
+			client, err := manager.GetClient(data.Provider)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 

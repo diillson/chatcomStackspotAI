@@ -1,4 +1,4 @@
-/* script.js */
+// script.js
 
 (function () {
     'use strict';
@@ -17,14 +17,18 @@
         const toggleSidebarButton = document.getElementById('toggle-sidebar');
         const sidebar = document.getElementById('sidebar');
         const llmProviderSelect = document.getElementById('llm-provider-select');
-        const llmProvider = document.body.dataset.llmProvider;
-        const modelName = document.body.dataset.modelName;
+        // Removemos estas linhas, pois não precisamos mais dos atributos data-llm-provider e data-model-name
+        // const llmProvider = document.body.dataset.llmProvider;
+        // const modelName = document.body.dataset.modelName;
 
         // Elemento para o Highlight.js
         const highlightStyleLink = document.getElementById('highlight-style');
 
         // Estado do aplicativo
         let currentChatID = null;
+        // Carregamos o provedor do localStorage ou usamos 'STACKSPOT' como padrão
+        let llmProvider = localStorage.getItem('llmProvider') || 'STACKSPOT';
+        let modelName = ''; // O modelName pode ser definido se necessário
         let assistantName = getAssistantName(llmProvider, modelName);
         let shouldAutoScroll = true;
 
@@ -48,6 +52,9 @@
         function initialize() {
             // Configurar o seletor de provedor LLM
             llmProviderSelect.value = llmProvider;
+
+            // Atualizar o assistantName
+            assistantName = getAssistantName(llmProvider, modelName);
 
             // Inicializar Highlight.js
             if (typeof hljs !== 'undefined') {
@@ -116,21 +123,10 @@
         // Manipulador para a mudança de provedor LLM
         function handleProviderChange() {
             const provider = llmProviderSelect.value;
-            fetch('/change-provider', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ provider })
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error(text); });
-                    }
-                    // Atualizar a página
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error("Erro ao alterar o provedor:", error);
-                });
+            // Armazena a preferência no localStorage
+            localStorage.setItem('llmProvider', provider);
+            llmProvider = provider;
+            assistantName = getAssistantName(llmProvider, modelName);
         }
 
         // Verifica se um chat existe
@@ -356,6 +352,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        provider: llmProvider, // Incluímos o provedor na requisição
                         prompt: message,
                         history: conversationHistory
                     })
@@ -372,7 +369,7 @@
             } catch (error) {
                 console.error("Erro ao enviar mensagem:", error);
                 removeLastMessage();
-                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente. '+error, false, true);
+                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente. ' + error, false, true);
             }
         }
 
@@ -581,3 +578,4 @@
 
     })();
 })();
+

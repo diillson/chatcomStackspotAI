@@ -1,4 +1,5 @@
 // main.go
+
 package main
 
 import (
@@ -14,26 +15,14 @@ import (
 	"path/filepath"
 )
 
-func indexHandler(manager *llm.LLMManager) http.HandlerFunc {
+func indexHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client, llmProvider, err := manager.GetClient()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		modelName := client.GetModelName()
-
 		tmpl, err := template.ParseFiles(filepath.Join("templates", "index.html"))
 		if err != nil {
 			http.Error(w, "Erro ao carregar o template", http.StatusInternalServerError)
 			return
 		}
-		data := map[string]interface{}{
-			"LLMProvider": llmProvider,
-			"ModelName":   modelName,
-		}
-		tmpl.Execute(w, data)
+		tmpl.Execute(w, nil)
 	}
 }
 
@@ -56,9 +45,8 @@ func main() {
 
 	// Cria um novo mux para aplicar o middleware
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", indexHandler(manager))
+	mux.HandleFunc("/", indexHandler())
 	mux.HandleFunc("/send", handlers.SendMessageHandler(manager))
-	mux.HandleFunc("/change-provider", handlers.ChangeProviderHandler(manager))
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	// Envolve o mux com o middleware ForceHTTPSMiddleware
