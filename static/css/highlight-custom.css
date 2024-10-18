@@ -1,0 +1,18 @@
+/* Estilos personalizados para o Highlight.js */
+
+/* Se você estiver usando um tema claro */
+.hljs-literal,
+.hljs-number,
+.hljs-string,
+.hljs-template-variable
+/*.hljs-attr */{
+    color: #a8ff60; /* Escolha a cor que preferir */
+}
+
+/* Se você estiver usando um tema escuro, talvez queira ajustar as cores */
+body.dark-mode .hljs-literal,
+body.dark-mode .hljs-number,
+body.dark-mode .hljs-string,
+body.dark-mode .hljs-template-variable {
+    color: #a8ff60; /* Escolha a cor que preferir */
+}
