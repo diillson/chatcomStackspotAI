@@ -35,6 +35,12 @@ func (c *OpenAIClient) SendPrompt(prompt string, history []models.Message) (stri
 	// Construir o array de mensagens
 	messages := []map[string]string{}
 
+	// Adicionar uma mensagem de sistema para informar o modelo utilizado
+	messages = append(messages, map[string]string{
+		"role":    "system",
+		"content": fmt.Sprintf("Você é um assistente AI usando o modelo %s.", c.model),
+	})
+
 	// Adicionar o histórico existente
 	for _, msg := range history {
 		messages = append(messages, map[string]string{
@@ -85,15 +91,24 @@ func (c *OpenAIClient) SendPrompt(prompt string, history []models.Message) (stri
 		}
 		defer resp.Body.Close()
 
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+
 		if resp.StatusCode != http.StatusOK {
-			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			errMsg := fmt.Sprintf("Erro na requisição à OpenAI: status %d, resposta: %s", resp.StatusCode, string(bodyBytes))
 			return "", fmt.Errorf(errMsg)
 		}
 
 		var result map[string]interface{}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		if err := json.Unmarshal(bodyBytes, &result); err != nil {
 			return "", err
+		}
+
+		// Verificar se houve erro na resposta
+		if apiError, ok := result["error"].(map[string]interface{}); ok {
+			return "", fmt.Errorf("Erro da OpenAI API: %s", apiError["message"])
 		}
 
 		choices, ok := result["choices"].([]interface{})

@@ -22,7 +22,14 @@ func indexHandler() http.HandlerFunc {
 			http.Error(w, "Erro ao carregar o template", http.StatusInternalServerError)
 			return
 		}
-		tmpl.Execute(w, nil)
+		// Obter o modelName da variável de ambiente ou usar um valor padrão
+		modelName := os.Getenv("OPENAI_MODEL")
+		if modelName == "" {
+			modelName = "gpt-4o-mini" // Modelo padrão
+		}
+		tmpl.Execute(w, map[string]string{
+			"ModelName": modelName,
+		})
 	}
 }
 

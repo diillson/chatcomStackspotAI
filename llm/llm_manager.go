@@ -1,5 +1,3 @@
-// llm/llm_manager.go
-
 package llm
 
 import (
@@ -8,41 +6,52 @@ import (
 )
 
 type LLMManager struct {
-	clients map[string]LLMClient
+	clients map[string]func(string) (LLMClient, error)
 }
 
 func NewLLMManager() (*LLMManager, error) {
 	manager := &LLMManager{
-		clients: make(map[string]LLMClient),
+		clients: make(map[string]func(string) (LLMClient, error)),
 	}
 
-	// Inicializar os clientes para cada provedor
-	// StackSpotAI
-	if os.Getenv("CLIENT_ID") != "" && os.Getenv("CLIENT_SECRET") != "" && os.Getenv("SLUG_NAME") != "" {
-		clientID := os.Getenv("CLIENT_ID")
-		clientSecret := os.Getenv("CLIENT_SECRET")
-		slug := os.Getenv("SLUG_NAME")
-		tokenManager := NewTokenManager(clientID, clientSecret)
-		manager.clients["STACKSPOT"] = NewStackSpotClient(tokenManager, slug)
+	// Configurar a fábrica para OpenAI
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("OPENAI_API_KEY não está definido")
 	}
 
-	// OpenAI
-	if os.Getenv("OPENAI_API_KEY") != "" {
-		apiKey := os.Getenv("OPENAI_API_KEY")
-		model := os.Getenv("OPENAI_MODEL")
+	manager.clients["OPENAI"] = func(model string) (LLMClient, error) {
 		if model == "" {
-			model = "gpt-4o-mini"
+			model = "gpt-3.5-turbo" // Modelo padrão
 		}
-		manager.clients["OPENAI"] = NewOpenAIClient(apiKey, model)
+		return NewOpenAIClient(apiKey, model), nil
+	}
+
+	// Configurar a fábrica para StackSpot
+	clientID := os.Getenv("CLIENT_ID")
+	clientSecret := os.Getenv("CLIENT_SECRET")
+	slug := os.Getenv("SLUG_NAME")
+	if clientID == "" || clientSecret == "" || slug == "" {
+		return nil, fmt.Errorf("As credenciais do StackSpot não estão definidas")
+	}
+	tokenManager := NewTokenManager(clientID, clientSecret)
+
+	manager.clients["STACKSPOT"] = func(model string) (LLMClient, error) {
+		// StackSpotClient não usa o parâmetro model, mas mantemos a assinatura consistente
+		return NewStackSpotClient(tokenManager, slug), nil
 	}
 
 	return manager, nil
 }
 
-func (m *LLMManager) GetClient(provider string) (LLMClient, error) {
-	client, exists := m.clients[provider]
-	if !exists {
-		return nil, fmt.Errorf("Provedor LLM '%s' não suportado ou não configurado", provider)
+func (m *LLMManager) GetClient(provider string, model string) (LLMClient, error) {
+	factoryFunc, ok := m.clients[provider]
+	if !ok {
+		return nil, fmt.Errorf("Provedor LLM '%s' não suportado", provider)
+	}
+	client, err := factoryFunc(model)
+	if err != nil {
+		return nil, err
 	}
 	return client, nil
 }

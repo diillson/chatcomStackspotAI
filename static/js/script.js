@@ -17,22 +17,20 @@
         const toggleSidebarButton = document.getElementById('toggle-sidebar');
         const sidebar = document.getElementById('sidebar');
         const llmProviderSelect = document.getElementById('llm-provider-select');
-        // Removemos estas linhas, pois não precisamos mais dos atributos data-llm-provider e data-model-name
-        // const llmProvider = document.body.dataset.llmProvider;
-        // const modelName = document.body.dataset.modelName;
 
         // Elemento para o Highlight.js
         const highlightStyleLink = document.getElementById('highlight-style');
 
         // Estado do aplicativo
         let currentChatID = null;
-        // Carregamos o provedor do localStorage ou usamos 'STACKSPOT' como padrão
         let llmProvider = localStorage.getItem('llmProvider') || 'STACKSPOT';
-        let modelName = ''; // O modelName pode ser definido se necessário
+        let modelName = document.body.getAttribute('data-model-name') || 'gpt-4o-mini';
+        console.log("Model Name:", modelName); // Adicionado para depuração
         let assistantName = getAssistantName(llmProvider, modelName);
+        console.log("Assistant Name:", assistantName); // Adicionado para depuração
         let shouldAutoScroll = true;
 
-        // Função alternativa para gerar UUID
+        // Função para gerar UUID
         function generateUUID() {
             let d = new Date().getTime();
             if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
@@ -55,6 +53,7 @@
 
             // Atualizar o assistantName
             assistantName = getAssistantName(llmProvider, modelName);
+            console.log("Assistant Name (after initialize):", assistantName);
 
             // Inicializar Highlight.js
             if (typeof hljs !== 'undefined') {
@@ -83,6 +82,7 @@
         // Adiciona todos os event listeners necessários
         function addEventListeners() {
             llmProviderSelect.addEventListener('change', handleProviderChange);
+            // Removido o event listener para modelSelect
             chatForm.addEventListener('submit', handleFormSubmit);
             userInput.addEventListener('keydown', handleUserInputKeyDown);
             userInput.addEventListener('input', debounce(autoResizeTextarea, 50));
@@ -105,28 +105,27 @@
                 case 'STACKSPOT':
                     return 'StackSpotAI';
                 case 'OPENAI':
-                    switch (model) {
-                        case 'gpt-4':
-                            return 'GPT-4';
-                        case 'gpt-3.5-turbo':
-                            return 'ChatGPT';
-                        case 'gpt-4o-mini':
-                            return 'GPT-4o-mini';
-                        default:
-                            return 'OpenAI Assistant';
+                    if (model === 'gpt-4') {
+                        return 'GPT-4';
+                    } else if (model === 'gpt-3.5-turbo') {
+                        return 'ChatGPT';
+                    } else if (model === 'gpt-4o-mini') {
+                        return 'GPT-4o-mini';
+                    } else {
+                        return 'OpenAI Assistant';
                     }
                 default:
                     return 'Assistente';
             }
         }
 
+
         // Manipulador para a mudança de provedor LLM
         function handleProviderChange() {
-            const provider = llmProviderSelect.value;
-            // Armazena a preferência no localStorage
-            localStorage.setItem('llmProvider', provider);
-            llmProvider = provider;
+            llmProvider = llmProviderSelect.value;
+            localStorage.setItem('llmProvider', llmProvider);
             assistantName = getAssistantName(llmProvider, modelName);
+            console.log("Assistant Name (after provider change):", assistantName);
         }
 
         // Verifica se um chat existe
@@ -263,7 +262,6 @@
 
                     // Destaque de sintaxe
                     elementHighlight();
-
                 } else {
                     const cleanHtml = DOMPurify.sanitize(text);
                     contentElement.innerHTML = cleanHtml;
@@ -335,8 +333,6 @@
                 text += '\n```';
             }
 
-            // Você pode adicionar lógica adicional para outros elementos de Markdown, se necessário
-
             return text;
         }
 
@@ -352,7 +348,8 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        provider: llmProvider, // Incluímos o provedor na requisição
+                        provider: llmProvider,
+                        model: modelName, // Enviar o nome do modelo
                         prompt: message,
                         history: conversationHistory
                     })
@@ -364,12 +361,44 @@
                 }
 
                 const data = await response.json();
-                removeLastMessage();
-                addMessage(assistantName, data.response, true, true, true);
+                const messageID = data.message_id;
+
+                // Inicia o polling para obter a resposta
+                pollForResponse(messageID);
             } catch (error) {
                 console.error("Erro ao enviar mensagem:", error);
                 removeLastMessage();
-                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente. ', false, true);
+                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente. ' + error, false, true);
+            }
+        }
+
+        // Função de polling para obter a resposta do servidor
+        async function pollForResponse(messageID) {
+            try {
+                const response = await fetch(`/get-response?message_id=${messageID}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'completed') {
+                    removeLastMessage();
+                    addMessage(assistantName, data.response, true, true, true);
+                } else if (data.status === 'processing') {
+                    // Aguarda antes de fazer a próxima verificação
+                    setTimeout(() => {
+                        pollForResponse(messageID);
+                    }, 1000); // Intervalo de 1 segundo
+                } else if (data.status === 'error') {
+                    removeLastMessage();
+                    addMessage('Erro', data.message, false, true);
+                }
+            } catch (error) {
+                console.error("Erro ao obter a resposta:", error);
+                removeLastMessage();
+                addMessage('Erro', 'Ocorreu um erro ao obter a resposta. Por favor, tente novamente. ' + error, false, true);
             }
         }
 
@@ -575,72 +604,6 @@
                 highlightStyleLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css";
             }
         }
-
-        async function sendMessageToServer(message) {
-            try {
-                const conversationHistory = getConversationHistory();
-                const provider = localStorage.getItem('llmProvider') || 'STACKSPOT';
-
-                // Adicionar indicador de carregamento
-                addMessage(assistantName, 'Pensando<span class="dots">...</span>', false, false, false);
-
-                const response = await fetch('/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        provider: provider,
-                        prompt: message,
-                        history: conversationHistory
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText);
-                }
-
-                const data = await response.json();
-                const messageID = data.message_id;
-
-                // Inicia o polling para obter a resposta
-                pollForResponse(messageID);
-            } catch (error) {
-                console.error("Erro ao enviar mensagem:", error);
-                removeLastMessage();
-                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente. ' + error, false, true);
-            }
-        }
-
-        async function pollForResponse(messageID) {
-            try {
-                const response = await fetch(`/get-response?message_id=${messageID}`);
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(errorText);
-                }
-
-                const data = await response.json();
-
-                if (data.status === 'completed') {
-                    removeLastMessage();
-                    addMessage(assistantName, data.response, true, true, true);
-                } else if (data.status === 'processing') {
-                    // Aguarda antes de fazer a próxima verificação
-                    setTimeout(() => {
-                        pollForResponse(messageID);
-                    }, 1000); // Intervalo de 1 segundo
-                } else if (data.status === 'error') {
-                    removeLastMessage();
-                    addMessage('Erro', data.message, false, true);
-                }
-            } catch (error) {
-                console.error("Erro ao obter a resposta:", error);
-                removeLastMessage();
-                addMessage('Erro', 'Ocorreu um erro ao obter a resposta. Por favor, tente novamente. ' + error, false, true);
-            }
-        }
-
-
-    })();
+    })
 })();
 

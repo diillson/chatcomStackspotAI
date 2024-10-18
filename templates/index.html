@@ -21,9 +21,7 @@
     <!-- Highlight.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js" defer></script>
 </head>
-<body>
-<!-- Removidos data-llm-provider e data-model-name -->
-
+<body data-model-name="{{.ModelName}}">
 <!-- Sidebar -->
 <aside id="sidebar" class="hidden">
     <div id="chat-list">
@@ -48,6 +46,7 @@
     </div>
 
     <div id="messages"></div>
+    <!-- Formulário de Chat -->
     <form id="chat-form" aria-label="Formulário de Chat">
         <textarea id="user-input" placeholder="Digite sua mensagem..." required aria-label="Entrada de mensagem" rows="1"></textarea>
         <div class="form-actions">
