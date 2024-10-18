@@ -1,3 +1,5 @@
+// llm/stackspot_client.go
+
 package llm
 
 import (
@@ -9,7 +11,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -58,7 +59,7 @@ func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (s
 	fullPrompt := fmt.Sprintf("%sUsuário: %s", conversationHistory, prompt)
 
 	// Enviar o prompt completo e obter o responseID
-	responseID, err := c.sendRequestToLLM(fullPrompt, token)
+	responseID, err := c.sendRequestToLLMWithRetry(fullPrompt, token)
 	if err != nil {
 		log.Printf("Erro ao enviar a requisição para a LLM: %v", err)
 		return "", fmt.Errorf("Erro ao enviar a requisição: %v", err)
@@ -69,7 +70,7 @@ func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (s
 	for i := 0; i < maxAttempts; i++ {
 		time.Sleep(2 * time.Second)
 
-		llmResponse, err = c.getLLMResponse(responseID, token)
+		llmResponse, err = c.getLLMResponseWithRetry(responseID, token)
 		if err == nil {
 			return llmResponse, nil
 		}
@@ -92,7 +93,53 @@ func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (s
 	return "", fmt.Errorf("Timeout ao obter a resposta da LLM")
 }
 
-// Implementação das funções auxiliares
+// Implementação das funções auxiliares com retry
+
+func (c *StackSpotClient) sendRequestToLLMWithRetry(prompt, accessToken string) (string, error) {
+	maxAttempts := 3
+	backoff := time.Second
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		responseID, err := c.sendRequestToLLM(prompt, accessToken)
+		if err != nil {
+			if isTemporaryError(err) {
+				log.Printf("Erro temporário ao enviar requisição para StackSpotAI (tentativa %d/%d): %v", attempt, maxAttempts, err)
+				if attempt < maxAttempts {
+					time.Sleep(backoff)
+					backoff *= 2 // Backoff exponencial
+					continue
+				}
+			}
+			return "", err
+		}
+		return responseID, nil
+	}
+
+	return "", fmt.Errorf("Falha ao enviar requisição para StackSpotAI após %d tentativas", maxAttempts)
+}
+
+func (c *StackSpotClient) getLLMResponseWithRetry(responseID, accessToken string) (string, error) {
+	maxAttempts := 3
+	backoff := time.Second
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		llmResponse, err := c.getLLMResponse(responseID, accessToken)
+		if err != nil {
+			if isTemporaryError(err) {
+				log.Printf("Erro temporário ao obter resposta da StackSpotAI (tentativa %d/%d): %v", attempt, maxAttempts, err)
+				if attempt < maxAttempts {
+					time.Sleep(backoff)
+					backoff *= 2 // Backoff exponencial
+					continue
+				}
+			}
+			return "", err
+		}
+		return llmResponse, nil
+	}
+
+	return "", fmt.Errorf("Falha ao obter resposta da StackSpotAI após %d tentativas", maxAttempts)
+}
 
 func (c *StackSpotClient) sendRequestToLLM(prompt, accessToken string) (string, error) {
 	conversationID := uuid.New().String()
@@ -112,7 +159,9 @@ func (c *StackSpotClient) sendRequestToLLM(prompt, accessToken string) (string, 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -152,7 +201,9 @@ func (c *StackSpotClient) getLLMResponse(responseID, accessToken string) (string
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Printf("Erro na requisição GET para a LLM: %v", err)
@@ -276,18 +327,19 @@ func (tm *TokenManager) refreshToken() (string, error) {
 	log.Println("Renovando o access token...")
 
 	tokenURL := "https://idm.stackspot.com/zup/oidc/oauth/token"
-	data := url.Values{}
-	data.Set("grant_type", "client_credentials")
-	data.Set("client_id", tm.clientID)
-	data.Set("client_secret", tm.clientSecret)
+	data := strings.NewReader(fmt.Sprintf(
+		"grant_type=client_credentials&client_id=%s&client_secret=%s",
+		tm.clientID, tm.clientSecret))
 
-	req, err := http.NewRequest("POST", tokenURL, strings.NewReader(data.Encode()))
+	req, err := http.NewRequest("POST", tokenURL, data)
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
