@@ -369,7 +369,7 @@
             } catch (error) {
                 console.error("Erro ao enviar mensagem:", error);
                 removeLastMessage();
-                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente. ' + error, false, true);
+                addMessage('Erro', 'Ocorreu um erro ao enviar a mensagem. Por favor, tente novamente. ', false, true);
             }
         }
 
