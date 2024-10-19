@@ -1,59 +1,68 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <!-- Metadados -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat com LLM</title>
+    <title>Seu Chat com LLM</title>
+    <!-- Estilos -->
     <link rel="stylesheet" href="/static/css/styles.css">
-
-    <!-- Font Awesome -->
+    <!-- Font Awesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <!-- Marked.js -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
-
     <!-- DOMPurify -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js" defer></script>
-
     <!-- Highlight.js CSS -->
-    <link id="highlight-style" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
-
+    <link id="highlight-style" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/monokai.min.css">
     <!-- Highlight.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js" defer></script>
-
-<!--    <link rel="stylesheet" href="/static/css/highlight-custom.css">-->
 </head>
 <body data-model-name="{{.ModelName}}">
-<!-- Sidebar -->
+<!-- Barra Lateral -->
 <aside id="sidebar" class="hidden">
-    <div id="chat-list">
-        <!-- Lista de conversas anteriores será gerada dinamicamente aqui -->
-    </div>
-    <button id="new-chat-button" aria-label="Iniciar nova conversa">Nova Conversa</button>
-</aside>
-
-<!-- Container Principal do Chat -->
-<main id="chat-container">
-    <!-- Botões no Canto Superior Esquerdo -->
-    <div class="top-left-buttons">
-        <!-- Botão de Toggle Sidebar -->
-        <button id="toggle-sidebar" aria-label="Mostrar barra lateral" class="toggle-sidebar">
-            <i class="fas fa-bars"></i>
+    <!-- Botões dentro da barra lateral -->
+    <div class="sidebar-buttons">
+        <button id="toggle-sidebar" aria-label="Ocultar barra lateral" class="toggle-sidebar">
+            <i class="fas fa-angle-left"></i>
         </button>
-
-        <!-- Botão de Alternância de Tema -->
         <button id="toggle-theme" aria-label="Alternar tema" class="toggle-theme">
             <i class="fas fa-moon"></i>
         </button>
     </div>
+    <div id="chat-list">
+        <!-- Lista de conversas anteriores será gerada dinamicamente aqui -->
+    </div>
+    <button id="new-chat-button" aria-label="Iniciar nova conversa">
+        <i class="fas fa-plus"></i> Nova Conversa
+    </button>
+</aside>
 
+<!-- Área Principal do Chat -->
+<main id="chat-container">
+    <!-- Botões Superiores -->
+    <div class="top-left-buttons">
+        <!-- Botão de Toggle Sidebar -->
+        <button id="toggle-sidebar-hidden" aria-label="Mostrar barra lateral" class="toggle-sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        <!-- Botão de Alternância de Tema -->
+        <button id="toggle-theme-hidden" aria-label="Alternar tema" class="toggle-theme">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+    <!-- Mensagens -->
     <div id="messages"></div>
-    <!-- Formulário de Chat -->
+    <!-- Formulário de Entrada -->
     <form id="chat-form" aria-label="Formulário de Chat">
         <textarea id="user-input" placeholder="Digite sua mensagem..." required aria-label="Entrada de mensagem" rows="1"></textarea>
         <div class="form-actions">
-            <button type="submit" aria-label="Enviar mensagem">Enviar</button>
-            <button type="button" id="clear-history-button" aria-label="Limpar histórico">Limpar Histórico</button>
+            <button type="submit" aria-label="Enviar mensagem">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+            <button type="button" id="clear-history-button" aria-label="Limpar histórico">
+                <i class="fas fa-trash-alt"></i>
+            </button>
             <select id="llm-provider-select" aria-label="Selecionar Provedor de LLM">
                 <option value="STACKSPOT">StackSpotAI</option>
                 <option value="OPENAI">OpenAI</option>

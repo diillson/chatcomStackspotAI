@@ -1,568 +1,441 @@
-/* 1. Definição Global do box-sizing */
-*,
-*::before,
-*::after {
+/* Reset e configurações básicas */
+* {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
 }
 
-/* 2. Definição de Variáveis CSS para Temas */
-:root {
-    /* Cores do Tema Claro */
-    --background-color: #f5f5f5;
-    --text-color: #333333;
-    --message-background: #ffffff;
-    --sidebar-background: #f0f0f0;
-    --button-background: #007bff;
-    --button-hover-background: #0056b3;
-    --button-text-color: #ffffff;
-    --toggle-button-background: #6c757d;
-    --toggle-button-hover-background: #5a6268;
-    --link-color: #007bff;
-    --code-background: #272822;
-    --code-text-color: #f8f8f2;
-    --blockquote-border: #ddd;
-    --blockquote-color: #555555;
-}
-
-body.dark-mode {
-    /* Cores do Tema Escuro */
-    --background-color: #121212;
-    --text-color: #e0e0e0;
-    --message-background: #2c2c2c;
-    --sidebar-background: #1e1e1e;
-    --button-background: #333333;
-    --button-hover-background: #555555;
-    --button-text-color: #e0e0e0;
-    --toggle-button-background: #333333;
-    --toggle-button-hover-background: #555555;
-    --link-color: #bb86fc;
-    --code-background: #333333;
-    --code-text-color: #e0e0e0;
-    --blockquote-border: #444444;
-    --blockquote-color: #bbbbbb;
-}
-
-/* 3. Definição do tamanho base da fonte com responsividade */
-html {
-    font-size: 16px; /* Tamanho base */
-}
-
-/* 4. Estilos básicos para o body */
 body {
-    font-family: Arial, sans-serif;
-    background-color: var(--background-color);
-    color: var(--text-color);
     display: flex;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    transition: background-color 0.3s, color 0.3s;
     height: 100vh;
-    overflow: hidden; /* Previna rolagem horizontal */
-    margin: 0;
-    position: relative;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow: hidden;
 }
 
-/* 5. Sidebar (aside) */
+/* Barra Lateral */
 #sidebar {
-    flex: 0 0 250px;
-    background-color: var(--sidebar-background);
-    border-right: 1px solid #ddd;
+    width: 260px;
+    background-color: #202123;
+    color: #fff;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    transition: transform 0.3s ease, flex-basis 0.3s ease;
-    position: relative;
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    position: fixed;
+    height: 100%;
     z-index: 1000;
+    left: 0;
+    top: 0;
 }
 
-/* Ocultar a sidebar quando a classe 'hidden' estiver presente */
 #sidebar.hidden {
     transform: translateX(-100%);
-    flex-basis: 0; /* Remove a largura flexível */
-    width: 0; /* Remove a largura fixa */
 }
 
-/* Mostrar a sidebar quando a classe 'visible' estiver presente */
-#sidebar.visible {
-    transform: translateX(0);
-    flex-basis: 250px; /* Restaura a largura flexível */
-    width: 250px; /* Restaura a largura fixa */
-}
-
-/* Em telas menores, a sidebar fica fixa e sobreposta */
-@media (max-width: 768px) {
-    #sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100%;
-        width: 250px;
-        transform: translateX(-100%);
-        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
-
-    #sidebar.visible {
-        transform: translateX(0);
-    }
-
-    /* Ajustar o chat-container para ocupar toda a tela quando sidebar está oculta */
-    #chat-container {
-        flex: 1;
-        margin-left: 0;
-        transition: margin-left 0.3s ease, flex-basis 0.3s ease;
-    }
-}
-
-/* 6. Container para Botões no Canto Superior Esquerdo */
-.top-left-buttons {
-    position: absolute; /* Relativo ao #chat-container */
-    top: 10px;
-    left: 10px;
-    display: flex;
-    gap: 10px; /* Espaçamento entre os botões */
-    z-index: 1001;
-}
-
-/* 7. Botão de Toggle Sidebar */
-.toggle-sidebar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--button-background);
-    color: var(--button-text-color);
-    border: none;
-    width: 40px; /* Mesma largura do toggle-theme */
-    height: 40px; /* Mesma altura do toggle-theme */
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 1.2rem; /* Tamanho de fonte consistente */
-    transition: background-color 0.3s ease;
-}
-
-.toggle-sidebar:hover {
-    background-color: var(--button-hover-background);
-}
-
-/* 8. Botão de Alternância de Tema */
-.toggle-theme {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--toggle-button-background); /* Cor similar ao botão de toggle da sidebar */
-    color: var(--button-text-color);
-    border: none;
-    width: 40px; /* Mesma largura do toggle-sidebar */
-    height: 40px; /* Mesma altura do toggle-sidebar */
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 1.2rem; /* Tamanho de fonte consistente */
-    transition: background-color 0.3s ease;
-}
-
-.toggle-theme:hover {
-    background-color: var(--toggle-button-hover-background);
-}
-
-/* 9. Lista de Conversas */
 #chat-list {
     flex: 1;
-    padding: 1em;
     overflow-y: auto;
+    padding: 20px;
 }
 
 .chat-item {
-    padding: 0.75em;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 0.5em;
+    background-color: #2b2c2f;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
     cursor: pointer;
-    background-color: var(--message-background);
+    color: #fff;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-size: 1rem;
-    transition: background-color 0.2s ease;
+    justify-content: space-between;
 }
 
 .chat-item:hover {
-    background-color: #e6e6e6;
+    background-color: #3e3f42;
 }
 
 .chat-name {
     flex: 1;
-    margin-right: 0.5em;
-    word-break: break-word;
+    margin-right: 10px;
 }
 
-.edit-chat-name,
-.delete-chat {
+.chat-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.chat-actions button {
     background: none;
     border: none;
+    color: #fff;
     cursor: pointer;
-    font-size: 1rem;
-    padding: 0.25em;
+    font-size: 16px;
 }
 
-.edit-chat-name {
-    color: #007bff;
-}
-
-.delete-chat {
-    color: #dc3545;
-}
-
-.delete-chat:hover {
-    color: #c82333;
-}
-
-/* 10. Botão "Nova Conversa" */
 #new-chat-button {
-    background-color: #28a745;
-    color: white;
+    background-color: #343541;
+    color: #fff;
     border: none;
-    padding: 0.75em;
+    padding: 15px;
     cursor: pointer;
-    border-radius: 4px;
-    margin: 1em;
-    font-size: 1rem;
-    width: calc(100% - 2em); /* 100% largura menos margens */
-    transition: background-color 0.3s ease;
-}
-
-#new-chat-button:hover {
-    background-color: #218838;
-}
-
-/* 11. Container do Chat */
-#chat-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background-color: var(--background-color);
-    position: relative; /* Necessário para posicionar os botões */
-    transition: margin-left 0.3s ease, flex-basis 0.3s ease;
-}
-
-/* 12. Área de Mensagens */
-#messages {
-    flex: 1;
-    padding: 1.25em;
-    overflow-y: auto;
-    background-color: var(--message-background);
-    color: var(--text-color);
-    font-size: 1rem;
-}
-
-/* 13. Formulário de Chat */
-#chat-form {
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid #ddd;
-    padding: 1em;
-    background-color: #f9f9f9;
-    font-size: 1rem;
-    gap: 0.5em; /* Espaçamento entre os elementos */
-}
-
-/* Form Actions */
-.form-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5em;
-}
-
-/* 14. Input de Mensagem */
-#user-input {
     width: 100%;
-    min-height: 3em;
-    max-height: 15em;
-    padding: 0.75em;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
-    line-height: 1.5;
-    resize: none;
-    overflow-y: auto;
-    box-sizing: border-box;
-    background-color: var(--message-background);
-    color: var(--text-color);
-}
-
-#user-input:focus {
-    outline: none;
-    border-color: #007bff;
-}
-
-/* Remover a borda de redimensionamento no canto */
-#user-input::-webkit-resizer {
-    display: none;
-}
-
-/* 15. Botões e Select no Formulário */
-#chat-form button,
-#chat-form select {
-    flex: 1;
-    padding: 0.30em 1em;
-    font-size: 1rem;
-    cursor: pointer;
-    border-radius: 4px;
-    white-space: nowrap;
-    border: none;
-}
-
-#chat-form button[type="submit"] {
-    background-color: #007bff;
-    color: var(--button-text-color);
-}
-
-#chat-form button[type="submit"]:hover {
-    background-color: #0056b3;
-}
-
-#clear-history-button {
-    background-color: #dc3545;
-    color: var(--button-text-color);
-}
-
-#clear-history-button:hover {
-    background-color: #c82333;
-}
-
-#llm-provider-select {
-    background-color: var(--toggle-button-background);
-    color: var(--button-text-color);
-}
-
-#llm-provider-select:hover {
-    background-color: var(--toggle-button-hover-background);
-}
-
-/* 16. Mensagens */
-.message {
-    margin-bottom: 1em;
-    font-size: 1rem;
-}
-
-.user-message {
-    text-align: right;
-}
-
-.llm-message {
-    text-align: left;
-}
-
-/* 17. Estilos para o conteúdo renderizado de Markdown */
-.message strong {
-    color: var(--text-color);
-    font-weight: bold;
-}
-
-.message p {
-    margin: 0;
-    line-height: 1.5;
-    font-size: 1rem;
-}
-
-.message pre {
-    background-color: var(--code-background);
-    color: var(--code-text-color);
-    padding: 0.75em;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-size: 0.875rem;
-}
-
-.message code {
-    background-color: var(--code-background);
-    color: var(--code-text-color);
-    padding: 0.25em 0.5em;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-.message a {
-    color: var(--link-color);
-    text-decoration: none;
-    font-size: 1rem;
-}
-
-.message a:hover {
-    text-decoration: underline;
-}
-
-.message ul,
-.message ol {
-    padding-left: 1.25em;
-    font-size: 1rem;
-}
-
-.message blockquote {
-    border-left: 4px solid var(--blockquote-border);
-    padding-left: 0.75em;
-    color: var(--blockquote-color);
-    margin: 0;
-    font-size: 1rem;
-}
-
-/* 18. Estilos para o Indicador de Carregamento */
-.dots::after {
-    content: '';
-    display: inline-block;
-    width: 1em;
-    text-align: left;
-    animation: dots 1s steps(5, end) infinite;
-}
-
-@keyframes dots {
-    0%,
-    20% {
-        content: '';
-    }
-    40% {
-        content: '.';
-    }
-    60% {
-        content: '..';
-    }
-    80%,
-    100% {
-        content: '...';
-    }
-}
-
-/* 19. Estilos para o Modo Dark */
-.dark-mode {
-    /* Cores de Fundo */
-    /* As cores são gerenciadas pelas variáveis CSS definidas anteriormente */
-}
-
-/* Ajustes para o Sidebar no Modo Dark */
-.dark-mode #sidebar {
-    /* As cores são gerenciadas pelas variáveis CSS definidas anteriormente */
-}
-
-/* Ajustes para o Container do Chat no Modo Dark */
-.dark-mode #chat-container {
-    /* As cores são gerenciadas pelas variáveis CSS definidas anteriormente */
-}
-
-/* Ajustes para a Área de Mensagens no Modo Dark */
-.dark-mode #messages {
-    /* As cores são gerenciadas pelas variáveis CSS definidas anteriormente */
-}
-
-/* Ajustes para o Formulário de Chat no Modo Dark */
-.dark-mode #chat-form {
-    background-color: var(--background-color);
-    border-top: 1px solid #333333;
-}
-
-/* Ajustes para os Itens de Chat no Modo Dark */
-.dark-mode .chat-item {
-    background-color: var(--message-background);
-    border: 1px solid #444444;
-}
-
-/* Ajustes para os Botões no Modo Dark */
-.dark-mode .toggle-sidebar,
-.dark-mode .toggle-theme {
-    /* As cores são gerenciadas pelas variáveis CSS definidas anteriormente */
-}
-
-.dark-mode #new-chat-button,
-.dark-mode #chat-form button,
-.dark-mode #clear-history-button,
-.dark-mode #llm-provider-select {
-    background-color: var(--toggle-button-background);
-    color: var(--button-text-color);
-}
-
-.dark-mode #chat-form button:hover,
-.dark-mode #clear-history-button:hover,
-.dark-mode #llm-provider-select:hover {
-    background-color: var(--toggle-button-hover-background);
-}
-
-/* Ajustes para o Código e Links no Modo Dark */
-.dark-mode .message pre,
-.dark-mode .message code {
-    /* As cores são gerenciadas pelas variáveis CSS definidas anteriormente */
-}
-
-.dark-mode .message a {
-    color: var(--link-color);
-}
-
-/* 20. Transições Suaves para Mudanças de Tema */
-body,
-#sidebar,
-#chat-container,
-#messages,
-#chat-form,
-.chat-item,
-.toggle-sidebar,
-.toggle-theme,
-#new-chat-button,
-#chat-form button,
-#clear-history-button,
-#llm-provider-select,
-.message pre,
-.message code,
-.message a,
-.message blockquote {
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* 21. Garantir que os Botões fiquem alinhados e com o mesmo tamanho */
-.toggle-sidebar,
-.toggle-theme {
-    width: 40px; /* Mesma largura para ambos os botões */
-    height: 40px; /* Mesma altura para ambos os botões */
-    padding: 0; /* Remove o padding interno */
-    font-size: 1.2rem; /* Tamanho de fonte consistente */
+    font-size: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.toggle-theme i {
-    font-size: 1rem; /* Ajusta o tamanho do ícone */
+#new-chat-button i {
+    margin-right: 10px;
 }
 
-/* Responsividade dos Botões */
+/* Área Principal do Chat */
+#chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #343541;
+    color: #dcdcdc;
+    position: relative;
+    margin-left: 260px;
+    transition: margin-left 0.3s ease;
+    width: 100%;
+}
+
+#chat-container.full-width {
+    margin-left: 0;
+}
+
+.top-left-buttons {
+    display: flex;
+    padding: 10px;
+    /*background-color: #343541;*/
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1001;
+}
+
+.top-left-buttons button {
+    background: none;
+    border: none;
+    color: #dcdcdc;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+#messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 80px 20px 20px 20px;
+    margin-top: 50px;
+}
+
+.message {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.user-message {
+    justify-content: flex-end;
+}
+
+.user-message .message-content {
+    background-color: #056162;
+    color: #fff;
+    align-self: flex-end;
+}
+
+.assistant-message .message-content {
+    background-color: #444654;
+    color: #dcdcdc;
+    align-self: flex-start;
+}
+
+.message-content {
+    padding: 15px;
+    border-radius: 8px;
+    max-width: 80%;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+#chat-form {
+    padding: 20px;
+    background-color: #40414f;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    box-sizing: border-box;
+}
+
+#user-input {
+    flex-grow: 1;
+    width: calc(100% - 50px);
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #343541;
+    color: #dcdcdc;
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.form-actions button,
+.form-actions select {
+    background: none;
+    border: none;
+    color: #dcdcdc;
+    font-size: 20px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.form-actions button#clear-history-button {
+    font-size: 20px;
+}
+
+#llm-provider-select {
+    background-color: #40414f;
+    color: #dcdcdc;
+    border: none;
+    font-size: 16px;
+    padding: 5px;
+}
+
+/* Suporte ao modo escuro */
+body.dark-mode {
+    background-color: #050505;
+    color: #dcdcdc;
+}
+
+body.dark-mode #sidebar {
+    background-color: #0d0d0d;
+}
+
+body.dark-mode #chat-container {
+    background-color: #050505;
+}
+
+body.dark-mode #chat-form {
+    background-color: #0d0d0d;
+}
+
+body.dark-mode .message-content {
+    background-color: #1e1e1e;
+}
+
+body.dark-mode #new-chat-button {
+    background-color: #1e1e1e;
+}
+
+body.dark-mode .top-left-buttons button {
+    color: #fff;
+}
+
+/* Quando a barra lateral está oculta */
+#sidebar.hidden + #chat-container .top-left-buttons {
+    display: flex;
+    gap: 10px;  /* Espaçamento entre os botões */
+}
+
+/* Responsividade */
 @media (max-width: 768px) {
-    .toggle-theme {
-        font-size: 1rem;
-        width: 35px;
-        height: 35px;
+    #sidebar {
+        width: 80%;
     }
 
-    .toggle-sidebar {
-        font-size: 1rem;
-        width: 35px;
-        height: 35px;
+    #chat-container {
+        margin-left: 0;
+    }
+
+    #sidebar.hidden {
+        transform: translateX(-100%);
+    }
+
+    #chat-container.full-width {
+        margin-left: 0;
+    }
+
+    .top-left-buttons {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+    }
+
+    #messages {
+        padding-top: 60px;
+    }
+
+    #chat-form {
+        padding: 10px;
+    }
+
+    #user-input {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .form-actions button,
+    .form-actions select {
+        font-size: 18px;
+    }
+
+    .message-content {
+        font-size: 14px;
     }
 }
 
 @media (max-width: 576px) {
-    .toggle-theme {
-        font-size: 1rem;
-        width: 30px;
-        height: 30px;
+    #sidebar {
+        width: 100%;
     }
 
-    .toggle-sidebar {
-        font-size: 1rem;
-        width: 30px;
-        height: 30px;
+    .top-left-buttons button {
+        /*font-size: 18px;*/
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .top-left-buttons button {
+        font-size: 18px;
+        padding: 6px;
+    }
+
+    .sidebar-buttons {
+        gap: 8px;  /* Mesma regra para a barra lateral */
+    }
+
+    .form-actions button,
+    .form-actions select {
+        font-size: 16px;
+    }
+
+    #user-input {
+        font-size: 14px;
+        width: 100%;
+    }
+
+    .message-content {
+        font-size: 13px;
     }
 }
 
-/* Garantir que elementos não causem overflow */
-#chat-container,
-#sidebar,
-#messages,
-#chat-form,
-.form-actions {
-    max-width: 100%;
-    overflow-x: hidden;
+/* Estilo para o indicador de digitação */
+.typing-indicator {
+    display: flex;
+    align-items: center;
 }
+
+.typing-indicator .dot {
+    width: 8px;
+    height: 8px;
+    background-color: #ccc;
+    border-radius: 50%;
+    margin-right: 5px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; }
+}
+
+/* Estilos para o conteúdo renderizado de Markdown */
+.message-content pre {
+    background-color: #2e2e2e;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.message-content code {
+    background-color: #2e2e2e;
+    padding: 2px 4px;
+    border-radius: 3px;
+    color: #fff;
+}
+
+.message-content a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+/* Ajustes para listas dentro de message-content */
+.message-content ul,
+.message-content ol {
+    margin: 10px 0 10px 20px; /* Ajusta margens para evitar overflow */
+    padding: 0;
+    list-style-position: outside; /* Garante que os marcadores estejam fora do conteúdo */
+}
+
+.message-content li {
+    margin-bottom: 5px; /* Espaçamento entre itens da lista */
+}
+
+/* Botões dentro da barra lateral */
+.sidebar-buttons {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+}
+
+.sidebar-buttons .toggle-theme,
+.sidebar-buttons .toggle-sidebar {
+    background: none;
+    border: none;
+    color: #dcdcdc;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+body.dark-mode .sidebar-buttons .toggle-theme,
+body.dark-mode .sidebar-buttons .toggle-sidebar {
+    color: #fff; /* Mesma cor para o tema escuro */
+}
+
+/* Botões fora da barra lateral */
+.top-left-buttons {
+    /*position: fixed;*/
+    /*top: 10px;*/
+    /*left: 10px;*/
+    /*z-index: 1001;*/
+    display: none; /* Será exibido quando a barra lateral estiver oculta */
+    gap: 10px;
+    padding: 10px;
+}
+
+.top-left-buttons .toggle-theme,
+.top-left-buttons .toggle-sidebar {
+    background: none;
+    border: none;
+    color: #dcdcdc;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* Mostrar botões quando a barra lateral estiver oculta */
+#sidebar.hidden + #chat-container .top-left-buttons {
+    display: flex;
+}
+
+/* Ocultar botões dentro da barra lateral quando estiver oculta */
+#sidebar.hidden .sidebar-buttons {
+    display: none;
+}
+
