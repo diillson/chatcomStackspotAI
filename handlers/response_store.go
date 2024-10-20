@@ -9,24 +9,35 @@ import (
 
 type ResponseStore struct {
 	mu        sync.RWMutex
-	responses map[string]*models.ResponseData
+	responses map[string]map[string]*models.ResponseData // Mapa para armazenar por session_id
 }
 
 func NewResponseStore() *ResponseStore {
 	return &ResponseStore{
-		responses: make(map[string]*models.ResponseData),
+		responses: make(map[string]map[string]*models.ResponseData),
 	}
 }
 
-func (store *ResponseStore) SetResponse(messageID string, data *models.ResponseData) {
+// Armazenar a resposta associada ao session_id e messageID
+func (store *ResponseStore) SetResponse(sessionID, messageID string, data *models.ResponseData) {
 	store.mu.Lock()
 	defer store.mu.Unlock()
-	store.responses[messageID] = data
+
+	// Verificar se já existe um mapa de respostas para o sessionID
+	if store.responses[sessionID] == nil {
+		store.responses[sessionID] = make(map[string]*models.ResponseData)
+	}
+	store.responses[sessionID][messageID] = data
 }
 
-func (store *ResponseStore) GetResponse(messageID string) (*models.ResponseData, bool) {
+// Obter a resposta associada ao session_id e messageID
+func (store *ResponseStore) GetResponse(sessionID, messageID string) (*models.ResponseData, bool) {
 	store.mu.RLock()
 	defer store.mu.RUnlock()
-	data, exists := store.responses[messageID]
-	return data, exists
+
+	if responsesForSession, exists := store.responses[sessionID]; exists {
+		data, found := responsesForSession[messageID]
+		return data, found
+	}
+	return nil, false
 }

@@ -27,10 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleThemeButtonHidden.addEventListener('click', toggleTheme);
 
     // Função para gerar UUID
+// Função para gerar um UUID
     function generateUUID() {
         let d = new Date().getTime();
         if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
-            d += performance.now(); // Use high-precision timer if available
+            d += performance.now(); // Usa o timer de alta precisão se disponível
         }
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = (d + Math.random() * 16) % 16 | 0;
@@ -38,6 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
         });
     }
+
+// Gerar um session_id se não existir
+    let sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+        sessionId = generateUUID();
+        localStorage.setItem('session_id', sessionId);
+    }
+
 
     // Inicialização
     initialize();
@@ -276,7 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     provider: llmProvider,
                     model: modelName,
                     prompt: message,
-                    history: conversationHistory
+                    history: conversationHistory,
+                    session_id: sessionId  // Adicionar o session_id aqui
                 })
             });
 
@@ -288,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             const messageID = data.message_id;
 
-            // Inicia o polling para obter a resposta
+            // Iniciar o polling para obter a resposta
             pollForResponse(messageID);
         } catch (error) {
             console.error("Erro ao enviar mensagem:", error);
