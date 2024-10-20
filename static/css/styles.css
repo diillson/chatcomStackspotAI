@@ -153,6 +153,11 @@ body {
     background-color: #444654;
     color: #dcdcdc;
     align-self: flex-start;
+    padding: 15px;
+    border-radius: 8px;
+    max-width: 80%;
+    line-height: 1.5;
+    word-break: break-word;
 }
 
 .message-content {

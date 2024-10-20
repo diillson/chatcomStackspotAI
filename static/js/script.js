@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let llmProvider = localStorage.getItem('llmProvider') || 'STACKSPOT';
     let modelName = document.body.getAttribute('data-model-name') || 'gpt-4o-mini';
     let assistantName = getAssistantName(llmProvider, modelName);
-    let shouldAutoScroll = true;
+    let shouldAutoScroll = true; // Controla se o scroll automático está ativo
 
     // eventos
     toggleSidebarButtonHidden.addEventListener('click', toggleSidebar);
@@ -90,6 +90,10 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleSidebarButton.addEventListener('click', toggleSidebar);
         toggleThemeButton.addEventListener('click', toggleTheme);
         clearHistoryButton.addEventListener('click', clearChatHistory);
+        // Adiciona o listener para detectar quando o usuário faz scroll manualmente
+        messagesDiv.addEventListener('scroll', () => {
+            checkIfShouldAutoScroll();
+        });
     }
 
     function getAssistantName(provider, model) {
@@ -109,6 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
             default:
                 return 'Assistente';
         }
+    }
+
+    // Função para verificar se o usuário está perto do final do chat
+    function checkIfShouldAutoScroll() {
+        const threshold = 50; // Distância do final para ativar o autoscroll
+        const position = messagesDiv.scrollTop + messagesDiv.clientHeight;
+        const height = messagesDiv.scrollHeight;
+        shouldAutoScroll = height - position < threshold;  // Ativar autoscroll somente se o usuário estiver perto do final
     }
 
     function handleProviderChange() {
@@ -224,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cleanHtml = DOMPurify.sanitize(rawHtml);
                 contentElement.innerHTML = `<strong>${sender}:</strong> ${cleanHtml}`;
 
-                // Aplicar syntax highlighting
+                // Aplicar syntax highlighting se for necessário
                 hljs.highlightAll();
             } else {
                 const cleanHtml = DOMPurify.sanitize(text);
@@ -240,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (save) {
-            saveMessage(sender, text, isMarkdown);
+            saveMessage(sender, text, isMarkdown);  // Salvar a mensagem no localStorage (tanto para o usuário quanto para a assistente)
         }
     }
 
@@ -296,13 +308,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.status === 'completed') {
-                removeLastMessage(); // Remover a mensagem de "digitação"
+                removeLastMessage(); // Remover o indicador de "pensando"
 
+                // Criar o contêiner da mensagem da assistente
                 const assistantMessageElement = document.createElement('div');
-                assistantMessageElement.classList.add('assistant-message', 'message-content');
+                assistantMessageElement.classList.add('message', 'assistant-message'); // Adicionar a classe da assistente
+
+                // Criar o conteúdo da mensagem com o nome da assistente
+                const contentElement = document.createElement('div');
+                contentElement.classList.add('message-content');
+                contentElement.innerHTML = `<strong>${assistantName}:</strong> `; // Nome da assistente já inserido
+
+                assistantMessageElement.appendChild(contentElement);
                 messagesDiv.appendChild(assistantMessageElement);
 
-                transcribeText(assistantMessageElement, data.response, 2);  // 50ms de delay por caractere
+                // Iniciar a transcrição da resposta da LLM com formatação
+                transcribeText(contentElement, data.response, 50);  // Transcrever o texto com o efeito de digitação, aplicando na "contentElement"
+
+                // Salvar a mensagem da IA no localStorage
+                saveMessage(assistantName, data.response, true);  // Salva a mensagem da IA
             } else if (data.status === 'processing') {
                 setTimeout(() => {
                     pollForResponse(messageID);
@@ -350,21 +374,36 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("currentChatID não está definido.");
             return;
         }
+
+        // Carregar o histórico atual do localStorage
         const history = JSON.parse(localStorage.getItem(currentChatID)) || [];
+
+        // Adicionar a nova mensagem ao histórico
         history.push({ sender, text, isMarkdown });
+
+        // Salvar o histórico atualizado de volta no localStorage
         localStorage.setItem(currentChatID, JSON.stringify(history));
     }
 
     function loadChatHistory() {
-        messagesDiv.innerHTML = '';
+        messagesDiv.innerHTML = ''; // Limpar o container de mensagens
+
+        // Carregar o histórico do chat atual do localStorage
         const history = JSON.parse(localStorage.getItem(currentChatID)) || [];
+
+        // Reexibir cada mensagem do histórico
         history.forEach(msg => {
             const messageClass = msg.sender === 'Você' ? 'user-message' : 'assistant-message';
-            addMessage(msg.sender, msg.text, messageClass, msg.isMarkdown, false);
+            addMessage(msg.sender, msg.text, messageClass, msg.isMarkdown, false); // Reexibir a mensagem sem salvar novamente
         });
+
+        // Salvar o chat atual no localStorage
         localStorage.setItem('currentChatID', currentChatID);
-        elementHighlight();
+
+        // Aplicar o highlight em mensagens de código
+        hljs.highlightAll();
     }
+
 
     function clearChatHistory() {
         if (!currentChatID) return;
@@ -457,21 +496,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function transcribeText(element, text, delay = 50) {
+    function transcribeText(element, text, delay = 2, charsPerTick = 10) {
         let index = 0;
         let currentText = '';
 
         function typeCharacter() {
             if (index < text.length) {
-                currentText += text.charAt(index);
-                // Converter o Markdown para HTML a cada caractere adicionado
+                // Adicionar múltiplos caracteres por vez
+                currentText += text.slice(index, index + charsPerTick);
                 const sanitizedHTML = DOMPurify.sanitize(marked.parse(currentText));
-                element.innerHTML = sanitizedHTML;
-                index++;
-                setTimeout(typeCharacter, delay);
+                element.innerHTML = `<strong>${assistantName}:</strong> ${sanitizedHTML}`;
+                index += charsPerTick;
+
+                // Somente fazer o scroll se o autoscroll estiver ativo
+                if (shouldAutoScroll) {
+                    messagesDiv.scrollTo({
+                        top: messagesDiv.scrollHeight,
+                        behavior: 'smooth',  // Faz o scroll suave
+                    });
+                }
+
+                setTimeout(typeCharacter, delay);  // Delay ajustado
             } else {
-                // Quando o texto estiver completo, aplicar o highlight para códigos
-                hljs.highlightAll();
+                hljs.highlightAll();  // Aplicar highlight quando o texto estiver completo
             }
         }
 
