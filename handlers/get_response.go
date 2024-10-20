@@ -1,5 +1,3 @@
-// handlers/get_response.go
-
 package handlers
 
 import (
@@ -10,24 +8,24 @@ import (
 func GetResponseHandler(store *ResponseStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
+			// Capturar message_id e session_id da URL da requisição
 			messageID := r.URL.Query().Get("message_id")
-			if messageID == "" {
-				http.Error(w, "message_id não fornecido", http.StatusBadRequest)
-				return
-			}
-
 			sessionID := r.URL.Query().Get("session_id")
-			if sessionID == "" {
-				http.Error(w, "session_id não fornecido", http.StatusBadRequest)
+
+			// Verificar se ambos foram fornecidos
+			if messageID == "" || sessionID == "" {
+				http.Error(w, "message_id ou session_id não fornecido", http.StatusBadRequest)
 				return
 			}
 
+			// Obter a resposta da store
 			data, exists := store.GetResponse(sessionID, messageID)
 			if !exists {
 				http.Error(w, "message_id não encontrado", http.StatusNotFound)
 				return
 			}
 
+			// Enviar a resposta como JSON
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(data)
 		} else {

@@ -22,12 +22,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let assistantName = getAssistantName(llmProvider, modelName);
     let shouldAutoScroll = true; // Controla se o scroll automático está ativo
 
+    // Verificar se o session_id já existe, caso contrário, gerá-lo e salvá-lo no localStorage
+    let sessionId = localStorage.getItem('session_id');
+    if (!sessionId) {
+        sessionId = generateUUID();
+        localStorage.setItem('session_id', sessionId);
+    }
+
     // eventos
     toggleSidebarButtonHidden.addEventListener('click', toggleSidebar);
     toggleThemeButtonHidden.addEventListener('click', toggleTheme);
 
-    // Função para gerar UUID
-// Função para gerar um UUID
+    // Função para gerar um UUID
     function generateUUID() {
         let d = new Date().getTime();
         if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
@@ -39,14 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
         });
     }
-
-// Gerar um session_id se não existir
-    let sessionId = localStorage.getItem('session_id');
-    if (!sessionId) {
-        sessionId = generateUUID();
-        localStorage.setItem('session_id', sessionId);
-    }
-
 
     // Inicialização
     initialize();
@@ -286,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     model: modelName,
                     prompt: message,
                     history: conversationHistory,
-                    session_id: sessionId  // Adicionar o session_id aqui
+                    session_id: sessionId  // Adicionar o session_id no corpo da requisição
                 })
             });
 
@@ -309,7 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function pollForResponse(messageID) {
         try {
-            const response = await fetch(`/get-response?message_id=${messageID}`);
+            // Obter o session_id do localStorage
+            const sessionId = localStorage.getItem('session_id');
+            if (!sessionId) {
+                throw new Error('session_id não encontrado no localStorage');
+            }
+
+            // Chamar o servidor para obter a resposta
+            const response = await fetch(`/get-response?message_id=${messageID}&session_id=${sessionId}`);
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(errorText);
@@ -506,6 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+// Função para fazer transcrição de texto com scroll suave
     function transcribeText(element, text, delay = 2, charsPerTick = 10) {
         let index = 0;
         let currentText = '';
@@ -533,6 +539,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         typeCharacter();
+    }
+
+// Função para verificar se o usuário está no final da área de mensagens
+    function checkIfShouldAutoScroll() {
+        const threshold = 50;  // Distância do final para ativar o autoscroll
+        const position = messagesDiv.scrollTop + messagesDiv.clientHeight;
+        const height = messagesDiv.scrollHeight;
+        shouldAutoScroll = height - position < threshold;  // Ativar autoscroll somente se o usuário estiver perto do final
     }
 
 
