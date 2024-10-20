@@ -16,7 +16,13 @@ func GetResponseHandler(store *ResponseStore) http.HandlerFunc {
 				return
 			}
 
-			data, exists := store.GetResponse(messageID)
+			sessionID := r.URL.Query().Get("session_id")
+			if sessionID == "" {
+				http.Error(w, "session_id não fornecido", http.StatusBadRequest)
+				return
+			}
+
+			data, exists := store.GetResponse(sessionID, messageID)
 			if !exists {
 				http.Error(w, "message_id não encontrado", http.StatusNotFound)
 				return

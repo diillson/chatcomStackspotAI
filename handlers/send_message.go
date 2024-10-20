@@ -37,8 +37,13 @@ func SendMessageHandler(manager *llm.LLMManager, store *ResponseStore) http.Hand
 			// Gerar um ID único para a mensagem
 			messageID := uuid.New().String()
 
-			// Armazenar o status inicial como "processing"
-			store.SetResponse(messageID, &models.ResponseData{
+			sessionID := r.URL.Query().Get("session_id")
+			if sessionID == "" {
+				http.Error(w, "session_id não fornecido", http.StatusBadRequest)
+				return
+			}
+
+			store.SetResponse(sessionID, messageID, &models.ResponseData{
 				Status: "processing",
 			})
 
@@ -47,7 +52,7 @@ func SendMessageHandler(manager *llm.LLMManager, store *ResponseStore) http.Hand
 				llmResponse, err := client.SendPrompt(prompt, history)
 				if err != nil {
 					log.Printf("Erro ao obter a resposta da LLM: %v", err)
-					store.SetResponse(messageID, &models.ResponseData{
+					store.SetResponse(sessionID, messageID, &models.ResponseData{
 						Status:  "error",
 						Message: fmt.Sprintf("Erro ao obter a resposta: %v", err),
 					})
@@ -55,7 +60,7 @@ func SendMessageHandler(manager *llm.LLMManager, store *ResponseStore) http.Hand
 				}
 
 				// Armazenar a resposta com status "completed"
-				store.SetResponse(messageID, &models.ResponseData{
+				store.SetResponse(sessionID, messageID, &models.ResponseData{
 					Status:   "completed",
 					Response: llmResponse,
 				})
