@@ -7,17 +7,44 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
 - [Funcionalidades](#funcionalidades)
 - [Pré-requisitos](#pré-requisitos)
 - [Instalação e Configuração](#instalação-e-configuração)
-  - [4.5. Configurar o Ambiente de Execução](#45-configurar-o-ambiente-de-execução)
+  - [1. Clone o Repositório](#1-clone-o-repositório)
+  - [2. Navegue até o Diretório do Projeto](#2-navegue-até-o-diretório-do-projeto)
+  - [3. Configurar Variáveis de Ambiente](#3-configurar-variáveis-de-ambiente)
+    - [Para StackSpot AI:](#para-stackspot-ai)
+    - [Para OpenAI:](#para-openai)
+  - [4. Instale as Dependências Backend](#4-instale-as-dependências-backend)
+  - [5. Configurar o Ambiente de Execução](#5-configurar-o-ambiente-de-execução)
+  - [6. Execute o Servidor Backend](#6-execute-o-servidor-backend)
+  - [7. Acesse o Aplicativo no Navegador](#7-acesse-o-aplicativo-no-navegador)
 - [Uso](#uso)
+  - [Criar Nova Conversa](#criar-nova-conversa)
+  - [Enviar Mensagens](#enviar-mensagens)
+  - [Alternar Entre Conversas](#alternar-entre-conversas)
+  - [Renomear Conversas](#renomear-conversas)
+  - [Deletar Conversas](#deletar-conversas)
+  - [Ocultar/Exibir Barra Lateral](#ocultarexibir-barra-lateral)
+  - [Limpar Histórico](#limpar-histórico)
+  - [Trocar o Provedor de LLM em Tempo de Execução](#trocar-o-provedor-de-llm-em-tempo-de-execução)
 - [Integração com a StackSpot AI e OpenAI](#integração-com-a-stackspot-ai-e-openai)
   - [Provedores de LLM](#provedores-de-llm)
   - [Fontes de Conhecimento (StackSpot AI)](#fontes-de-conhecimento-stackspot-ai)
   - [Comandos Rápidos (StackSpot AI)](#comandos-rápidos-stackspot-ai)
   - [Agentes Especializados (StackSpot AI)](#agentes-especializados-stackspot-ai)
   - [Manutenção de Contexto (OpenAI)](#manutenção-de-contexto-openai)
+  - [Importância dos Provedores de LLM](#importância-dos-provedores-de-llm)
 - [Detalhes Técnicos](#detalhes-técnicos)
+  - [Arquitetura](#arquitetura)
   - [Segurança e Força de HTTPS](#segurança-e-força-de-https)
+  - [Frontend](#frontend)
+  - [Backend](#backend)
+  - [Armazenamento](#armazenamento)
+  - [Modificações para Suporte à Troca Dinâmica de Provedor de LLM](#modificações-para-suporte-à-troca-dinâmica-de-provedor-de-llm)
 - [Resolução de Problemas](#resolução-de-problemas)
+  - [Provedor de LLM Não Altera](#provedor-de-llm-não-altera)
+  - [Falha na Autenticação com o Provedor de LLM](#falha-na-autenticação-com-o-provedor-de-llm)
+  - [Contexto Não Mantido nas Conversas](#contexto-não-mantido-nas-conversas)
+  - [Comandos Rápidos ou Agentes Não Funcionam (StackSpot AI)](#comandos-rápidos-ou-agentes-não-funcionam-stackspot-ai)
+  - [Outros Problemas Relacionados à Interface](#outros-problemas-relacionados-à-interface)
 - [Contribuição](#contribuição)
 - [Licença](#licença)
 - [Agradecimentos](#agradecimentos)
@@ -92,7 +119,7 @@ Exemplo:
 
 ```bash
 export OPENAI_API_KEY=sua_chave_api_openai
-export OPENAI_MODEL=gpt-4  # ou gpt-3.5-turbo
+export OPENAI_MODEL=gpt-4 # ou gpt-3.5-turbo
 ```
 
 **Nota:** Certifique-se de que suas chaves de API têm acesso aos modelos especificados.
@@ -109,21 +136,17 @@ O aplicativo utiliza uma variável de ambiente `ENV` para determinar o ambiente 
 
 #### Definição da Variável `ENV`
 
-- **Para Desenvolvimento Local:**
+- **Para Desenvolvimento Local:** Defina `ENV` como `dev`. Isso desabilita o redirecionamento para HTTPS, permitindo que você teste a aplicação localmente sem certificados SSL.
 
-  Defina `ENV` como `dev`. Isso desabilita o redirecionamento para HTTPS, permitindo que você teste a aplicação localmente sem certificados SSL.
+```bash
+export ENV=dev
+```
 
-  ```bash
-  export ENV=dev
-  ```
+- **Para Produção (Heroku):** Defina `ENV` como `prod`. Isso ativa o middleware que força todas as requisições a utilizarem HTTPS.
 
-- **Para Produção (Heroku):**
-
-  Defina `ENV` como `prod`. Isso ativa o middleware que força todas as requisições a utilizarem HTTPS.
-
-  ```bash
-  heroku config:set ENV=prod
-  ```
+```bash
+heroku config:set ENV=prod
+```
 
 **Nota:** Assegure-se de definir a variável `ENV` corretamente no seu ambiente para evitar redirecionamentos indesejados durante o desenvolvimento.
 
@@ -268,8 +291,8 @@ Para garantir a segurança das comunicações, o aplicativo implementa um middle
 - **Integração com Provedores de LLM:**
   - **Autenticação:** Utiliza as chaves de API configuradas para autenticação.
   - **Manipulação de Requisições:** Structs e métodos definidos para serializar e deserializar dados JSON trocados com as APIs.
-  - **Rotas Implementadas:**
-    - **`/send`:** Endpoint POST que recebe mensagens do frontend, encaminha para o provedor de LLM e retorna a resposta.
+- **Rotas Implementadas:**
+  - **`/send`:** Endpoint POST que recebe mensagens do frontend, encaminha para o provedor de LLM e retorna a resposta.
 - **Concorrência e Tratamento de Erros:** Manipulação adequada de requisições HTTP, timeouts e relatórios de erros para garantir um aplicativo robusto.
 
 ### Armazenamento
@@ -279,8 +302,6 @@ Para garantir a segurança das comunicações, o aplicativo implementa um middle
 ### Modificações para Suporte à Troca Dinâmica de Provedor de LLM
 
 - **LLMManager:** Implementação de uma estrutura que gerencia múltiplos clientes LLM e permite a troca dinâmica do provedor.
-- **Endpoints Atualizados:**
-  - **`/change-provider`:** Novo endpoint que recebe solicitações para alterar o provedor de LLM em tempo de execução.
 - **Atualizações no Frontend:**
   - Adicionado um seletor (`select`) no `index.html` para permitir que o usuário escolha o provedor de LLM.
   - `script.js` atualizado para lidar com a mudança de provedor e recarregar a interface adequadamente.
@@ -340,21 +361,21 @@ Contribuições são bem-vindas! Para contribuir:
 1. **Faça um Fork** do repositório.
 2. Crie uma **branch** para sua feature ou correção:
 
-   ```bash
-   git checkout -b minha-feature
-   ```
+```bash
+git checkout -b minha-feature
+```
 
 3. **Commit** suas alterações:
 
-   ```bash
-   git commit -m 'Adiciona nova funcionalidade'
-   ```
+```bash
+git commit -m 'Adiciona nova funcionalidade'
+```
 
 4. **Push** para a branch:
 
-   ```bash
-   git push origin minha-feature
-   ```
+```bash
+git push origin minha-feature
+```
 
 5. Abra um **Pull Request** no GitHub.
 

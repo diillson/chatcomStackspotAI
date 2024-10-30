@@ -1,14 +1,13 @@
-// llm/openai_client.go
-
 package llm
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/chatcomStackspotAI/models"
+	"go.uber.org/zap"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 )
@@ -16,12 +15,14 @@ import (
 type OpenAIClient struct {
 	apiKey string
 	model  string
+	logger *zap.Logger
 }
 
-func NewOpenAIClient(apiKey, model string) *OpenAIClient {
+func NewOpenAIClient(apiKey, model string, logger *zap.Logger) *OpenAIClient {
 	return &OpenAIClient{
 		apiKey: apiKey,
 		model:  model,
+		logger: logger,
 	}
 }
 
@@ -29,19 +30,13 @@ func (c *OpenAIClient) GetModelName() string {
 	return c.model
 }
 
-func (c *OpenAIClient) SendPrompt(prompt string, history []models.Message) (string, error) {
+func (c *OpenAIClient) SendPrompt(ctx context.Context, prompt string, history []models.Message) (string, error) {
 	url := "https://api.openai.com/v1/chat/completions"
 
 	// Construir o array de mensagens
 	messages := []map[string]string{}
 
-	// Adicionar uma mensagem de sistema para informar o modelo utilizado
-	messages = append(messages, map[string]string{
-		"role":    "system",
-		"content": fmt.Sprintf("Você é um assistente AI usando o modelo %s.", c.model),
-	})
-
-	// Adicionar o histórico existente
+	// Adicionar o histórico
 	for _, msg := range history {
 		messages = append(messages, map[string]string{
 			"role":    msg.Role,
@@ -66,9 +61,9 @@ func (c *OpenAIClient) SendPrompt(prompt string, history []models.Message) (stri
 	backoff := time.Second
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonValue))
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("erro ao criar a requisição: %w", err)
 		}
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
@@ -78,22 +73,21 @@ func (c *OpenAIClient) SendPrompt(prompt string, history []models.Message) (stri
 		}
 		resp, err := client.Do(req)
 		if err != nil {
-			// Verificar se o erro é temporário ou timeout
 			if isTemporaryError(err) {
-				log.Printf("Erro temporário ao chamar OpenAI (tentativa %d/%d): %v", attempt, maxAttempts, err)
+				c.logger.Warn("Erro temporário ao chamar OpenAI", zap.Int("attempt", attempt), zap.Error(err))
 				if attempt < maxAttempts {
 					time.Sleep(backoff)
 					backoff *= 2 // Backoff exponencial
 					continue
 				}
 			}
-			return "", err
+			return "", fmt.Errorf("erro ao fazer a requisição para OpenAI: %w", err)
 		}
 		defer resp.Body.Close()
 
 		bodyBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("erro ao ler a resposta da OpenAI: %w", err)
 		}
 
 		if resp.StatusCode != http.StatusOK {
@@ -103,12 +97,7 @@ func (c *OpenAIClient) SendPrompt(prompt string, history []models.Message) (stri
 
 		var result map[string]interface{}
 		if err := json.Unmarshal(bodyBytes, &result); err != nil {
-			return "", err
-		}
-
-		// Verificar se houve erro na resposta
-		if apiError, ok := result["error"].(map[string]interface{}); ok {
-			return "", fmt.Errorf("Erro da OpenAI API: %s", apiError["message"])
+			return "", fmt.Errorf("erro ao decodificar a resposta da OpenAI: %w", err)
 		}
 
 		choices, ok := result["choices"].([]interface{})

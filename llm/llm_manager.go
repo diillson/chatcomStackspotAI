@@ -2,29 +2,32 @@ package llm
 
 import (
 	"fmt"
+	"go.uber.org/zap"
 	"os"
 )
 
 type LLMManager struct {
 	clients map[string]func(string) (LLMClient, error)
+	logger  *zap.Logger
 }
 
-func NewLLMManager() (*LLMManager, error) {
+func NewLLMManager(logger *zap.Logger) (*LLMManager, error) {
 	manager := &LLMManager{
 		clients: make(map[string]func(string) (LLMClient, error)),
+		logger:  logger,
 	}
 
 	// Configurar a fábrica para OpenAI
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
-		return nil, fmt.Errorf("OPENAI_API_KEY não está definido")
-	}
-
-	manager.clients["OPENAI"] = func(model string) (LLMClient, error) {
-		if model == "" {
-			model = "gpt-3.5-turbo" // Modelo padrão
+		logger.Warn("OPENAI_API_KEY não está definido")
+	} else {
+		manager.clients["OPENAI"] = func(model string) (LLMClient, error) {
+			if model == "" {
+				model = "gpt-3.5-turbo" // Modelo padrão
+			}
+			return NewOpenAIClient(apiKey, model, logger), nil
 		}
-		return NewOpenAIClient(apiKey, model), nil
 	}
 
 	// Configurar a fábrica para StackSpot
@@ -32,13 +35,12 @@ func NewLLMManager() (*LLMManager, error) {
 	clientSecret := os.Getenv("CLIENT_SECRET")
 	slug := os.Getenv("SLUG_NAME")
 	if clientID == "" || clientSecret == "" || slug == "" {
-		return nil, fmt.Errorf("As credenciais do StackSpot não estão definidas")
-	}
-	tokenManager := NewTokenManager(clientID, clientSecret)
-
-	manager.clients["STACKSPOT"] = func(model string) (LLMClient, error) {
-		// StackSpotClient não usa o parâmetro model, mas mantemos a assinatura consistente
-		return NewStackSpotClient(tokenManager, slug), nil
+		logger.Warn("As credenciais do StackSpot não estão definidas")
+	} else {
+		tokenManager := NewTokenManager(clientID, clientSecret, logger)
+		manager.clients["STACKSPOT"] = func(model string) (LLMClient, error) {
+			return NewStackSpotClient(tokenManager, slug, logger), nil
+		}
 	}
 
 	return manager, nil

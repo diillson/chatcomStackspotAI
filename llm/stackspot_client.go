@@ -1,15 +1,13 @@
-// llm/stackspot_client.go
-
 package llm
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/chatcomStackspotAI/models"
-	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -19,12 +17,14 @@ import (
 type StackSpotClient struct {
 	tokenManager *TokenManager
 	slug         string
+	logger       *zap.Logger
 }
 
-func NewStackSpotClient(tokenManager *TokenManager, slug string) *StackSpotClient {
+func NewStackSpotClient(tokenManager *TokenManager, slug string, logger *zap.Logger) *StackSpotClient {
 	return &StackSpotClient{
 		tokenManager: tokenManager,
 		slug:         slug,
+		logger:       logger,
 	}
 }
 
@@ -45,11 +45,11 @@ func formatConversationHistory(history []models.Message) string {
 	return conversationBuilder.String()
 }
 
-func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (string, error) {
-	token, err := c.tokenManager.GetAccessToken()
+func (c *StackSpotClient) SendPrompt(ctx context.Context, prompt string, history []models.Message) (string, error) {
+	token, err := c.tokenManager.GetAccessToken(ctx)
 	if err != nil {
-		log.Printf("Erro ao obter o token: %v", err)
-		return "", fmt.Errorf("Erro ao obter o token: %v", err)
+		c.logger.Error("Erro ao obter o token", zap.Error(err))
+		return "", fmt.Errorf("erro ao obter o token: %w", err)
 	}
 
 	// Formatar o histórico da conversa
@@ -59,102 +59,105 @@ func (c *StackSpotClient) SendPrompt(prompt string, history []models.Message) (s
 	fullPrompt := fmt.Sprintf("%sUsuário: %s", conversationHistory, prompt)
 
 	// Enviar o prompt completo e obter o responseID
-	responseID, err := c.sendRequestToLLMWithRetry(fullPrompt, token)
+	responseID, err := c.sendRequestToLLMWithRetry(ctx, fullPrompt, token)
 	if err != nil {
-		log.Printf("Erro ao enviar a requisição para a LLM: %v", err)
-		return "", fmt.Errorf("Erro ao enviar a requisição: %v", err)
+		c.logger.Error("Erro ao enviar a requisição para a LLM", zap.Error(err))
+		return "", fmt.Errorf("erro ao enviar a requisição: %w", err)
 	}
 
 	var llmResponse string
 	maxAttempts := 50
 	for i := 0; i < maxAttempts; i++ {
-		time.Sleep(2 * time.Second)
+		select {
+		case <-ctx.Done():
+			return "", fmt.Errorf("contexto cancelado ou expirado: %w", ctx.Err())
+		case <-time.After(2 * time.Second):
+			llmResponse, err = c.getLLMResponseWithRetry(ctx, responseID, token)
+			if err == nil {
+				return llmResponse, nil
+			}
 
-		llmResponse, err = c.getLLMResponseWithRetry(responseID, token)
-		if err == nil {
-			return llmResponse, nil
+			if strings.Contains(err.Error(), "resposta ainda não está pronta") {
+				c.logger.Info("Resposta ainda não está pronta", zap.Int("tentativa", i+1))
+				continue
+			}
+
+			if strings.Contains(err.Error(), "a execução da LLM falhou") {
+				c.logger.Error("Falha na execução da LLM", zap.Error(err))
+				return "", fmt.Errorf("a LLM não pôde processar a solicitação")
+			}
+
+			c.logger.Error("Erro ao obter a resposta da LLM", zap.Error(err))
+			return "", fmt.Errorf("erro ao obter a resposta: %w", err)
 		}
-
-		if strings.Contains(err.Error(), "resposta ainda não está pronta") {
-			log.Printf("Resposta ainda não está pronta, tentativa %d/%d", i+1, maxAttempts)
-			continue
-		}
-
-		if strings.Contains(err.Error(), "a execução da LLM falhou") {
-			log.Printf("Falha na execução da LLM: %v", err)
-			return "", fmt.Errorf("A LLM não pôde processar a solicitação.")
-		}
-
-		log.Printf("Erro ao obter a resposta da LLM: %v", err)
-		return "", fmt.Errorf("Erro ao obter a resposta: %v", err)
 	}
 
-	log.Printf("Timeout ao obter a resposta da LLM: %v", err)
-	return "", fmt.Errorf("Timeout ao obter a resposta da LLM")
+	c.logger.Error("Timeout ao obter a resposta da LLM")
+	return "", fmt.Errorf("timeout ao obter a resposta da LLM")
 }
 
 // Implementação das funções auxiliares com retry
 
-func (c *StackSpotClient) sendRequestToLLMWithRetry(prompt, accessToken string) (string, error) {
+func (c *StackSpotClient) sendRequestToLLMWithRetry(ctx context.Context, prompt, accessToken string) (string, error) {
 	maxAttempts := 3
 	backoff := time.Second
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		responseID, err := c.sendRequestToLLM(prompt, accessToken)
+		responseID, err := c.sendRequestToLLM(ctx, prompt, accessToken)
 		if err != nil {
 			if isTemporaryError(err) {
-				log.Printf("Erro temporário ao enviar requisição para StackSpotAI (tentativa %d/%d): %v", attempt, maxAttempts, err)
+				c.logger.Warn("Erro temporário ao enviar requisição para StackSpotAI", zap.Int("attempt", attempt), zap.Error(err))
 				if attempt < maxAttempts {
 					time.Sleep(backoff)
 					backoff *= 2 // Backoff exponencial
 					continue
 				}
 			}
-			return "", err
+			return "", fmt.Errorf("erro ao enviar requisição para StackSpotAI: %w", err)
 		}
 		return responseID, nil
 	}
 
-	return "", fmt.Errorf("Falha ao enviar requisição para StackSpotAI após %d tentativas", maxAttempts)
+	return "", fmt.Errorf("falha ao enviar requisição para StackSpotAI após %d tentativas", maxAttempts)
 }
 
-func (c *StackSpotClient) getLLMResponseWithRetry(responseID, accessToken string) (string, error) {
+func (c *StackSpotClient) getLLMResponseWithRetry(ctx context.Context, responseID, accessToken string) (string, error) {
 	maxAttempts := 3
 	backoff := time.Second
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		llmResponse, err := c.getLLMResponse(responseID, accessToken)
+		llmResponse, err := c.getLLMResponse(ctx, responseID, accessToken)
 		if err != nil {
 			if isTemporaryError(err) {
-				log.Printf("Erro temporário ao obter resposta da StackSpotAI (tentativa %d/%d): %v", attempt, maxAttempts, err)
+				c.logger.Warn("Erro temporário ao obter resposta da StackSpotAI", zap.Int("attempt", attempt), zap.Error(err))
 				if attempt < maxAttempts {
 					time.Sleep(backoff)
 					backoff *= 2 // Backoff exponencial
 					continue
 				}
 			}
-			return "", err
+			return "", fmt.Errorf("erro ao obter resposta da StackSpotAI: %w", err)
 		}
 		return llmResponse, nil
 	}
 
-	return "", fmt.Errorf("Falha ao obter resposta da StackSpotAI após %d tentativas", maxAttempts)
+	return "", fmt.Errorf("falha ao obter resposta da StackSpotAI após %d tentativas", maxAttempts)
 }
 
-func (c *StackSpotClient) sendRequestToLLM(prompt, accessToken string) (string, error) {
-	conversationID := uuid.New().String()
+func (c *StackSpotClient) sendRequestToLLM(ctx context.Context, prompt, accessToken string) (string, error) {
+	conversationID := generateUUID()
 
 	url := fmt.Sprintf("https://genai-code-buddy-api.stackspot.com/v1/quick-commands/create-execution/%s?conversation_id=%s", c.slug, conversationID)
-	log.Printf("Fazendo POST para URL: %s", url)
+	c.logger.Info("Fazendo POST para URL", zap.String("url", url))
 
 	requestBody := map[string]string{
 		"input_data": prompt,
 	}
 	jsonValue, _ := json.Marshal(requestBody)
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonValue))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("erro ao criar a requisição: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
@@ -164,39 +167,38 @@ func (c *StackSpotClient) sendRequestToLLM(prompt, accessToken string) (string, 
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("erro ao fazer a requisição: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("erro ao ler a resposta: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("Erro na requisição à LLM: status %d, resposta: %s", resp.StatusCode, string(bodyBytes))
+		c.logger.Error("Erro na requisição à LLM", zap.Int("status_code", resp.StatusCode), zap.String("response", string(bodyBytes)))
 		return "", fmt.Errorf("erro na requisição à LLM: status %d, resposta: %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var responseID string
 	if err := json.Unmarshal(bodyBytes, &responseID); err != nil {
-		log.Printf("Erro ao deserializar o responseID: %v", err)
-		return "", err
+		c.logger.Error("Erro ao deserializar o responseID", zap.Error(err))
+		return "", fmt.Errorf("erro ao deserializar o responseID: %w", err)
 	}
 
-	log.Printf("Response ID recebido: %s", responseID)
+	c.logger.Info("Response ID recebido", zap.String("response_id", responseID))
 	return responseID, nil
 }
 
-func (c *StackSpotClient) getLLMResponse(responseID, accessToken string) (string, error) {
+func (c *StackSpotClient) getLLMResponse(ctx context.Context, responseID, accessToken string) (string, error) {
 	url := fmt.Sprintf("https://genai-code-buddy-api.stackspot.com/v1/quick-commands/callback/%s", responseID)
-	log.Printf("Fazendo GET para URL: %s", url)
-	log.Printf("Usando Token de Acesso: %s...", accessToken[:10])
+	c.logger.Info("Fazendo GET para URL", zap.String("url", url))
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		log.Printf("Erro ao criar a requisição GET: %v", err)
-		return "", err
+		c.logger.Error("Erro ao criar a requisição GET", zap.Error(err))
+		return "", fmt.Errorf("erro ao criar a requisição GET: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/json")
@@ -206,20 +208,18 @@ func (c *StackSpotClient) getLLMResponse(responseID, accessToken string) (string
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Erro na requisição GET para a LLM: %v", err)
-		return "", err
+		c.logger.Error("Erro na requisição GET para a LLM", zap.Error(err))
+		return "", fmt.Errorf("erro na requisição GET para a LLM: %w", err)
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Erro ao ler o corpo da resposta da LLM: %v", err)
-		return "", err
+		c.logger.Error("Erro ao ler o corpo da resposta da LLM", zap.Error(err))
+		return "", fmt.Errorf("erro ao ler o corpo da resposta da LLM: %w", err)
 	}
 
-	log.Printf("Status Code: %d", resp.StatusCode)
-	log.Printf("Headers da Resposta: %v", resp.Header)
-	log.Printf("Corpo da Resposta: %s", string(bodyBytes))
+	c.logger.Info("Resposta recebida", zap.Int("status_code", resp.StatusCode), zap.String("response", string(bodyBytes)))
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("erro na requisição de callback: status %d, resposta: %s", resp.StatusCode, string(bodyBytes))
@@ -227,8 +227,8 @@ func (c *StackSpotClient) getLLMResponse(responseID, accessToken string) (string
 
 	var callbackResponse CallbackResponse
 	if err := json.Unmarshal(bodyBytes, &callbackResponse); err != nil {
-		log.Printf("Erro ao deserializar a resposta JSON: %v", err)
-		return "", err
+		c.logger.Error("Erro ao deserializar a resposta JSON", zap.Error(err))
+		return "", fmt.Errorf("erro ao deserializar a resposta JSON: %w", err)
 	}
 
 	switch callbackResponse.Progress.Status {
@@ -242,10 +242,10 @@ func (c *StackSpotClient) getLLMResponse(responseID, accessToken string) (string
 			return "", fmt.Errorf("nenhuma resposta disponível")
 		}
 	case "FAILURE":
-		log.Printf("A execução falhou com status: %s", callbackResponse.Progress.Status)
+		c.logger.Error("A execução falhou", zap.String("status", callbackResponse.Progress.Status))
 		return "", fmt.Errorf("a execução da LLM falhou")
 	default:
-		log.Printf("Status da execução: %s", callbackResponse.Progress.Status)
+		c.logger.Info("Status da execução", zap.String("status", callbackResponse.Progress.Status))
 		return "", fmt.Errorf("resposta ainda não está pronta")
 	}
 }
@@ -298,16 +298,18 @@ type TokenManager struct {
 	accessToken  string
 	expiresAt    time.Time
 	mu           sync.RWMutex
+	logger       *zap.Logger
 }
 
-func NewTokenManager(clientID, clientSecret string) *TokenManager {
+func NewTokenManager(clientID, clientSecret string, logger *zap.Logger) *TokenManager {
 	return &TokenManager{
 		clientID:     clientID,
 		clientSecret: clientSecret,
+		logger:       logger,
 	}
 }
 
-func (tm *TokenManager) GetAccessToken() (string, error) {
+func (tm *TokenManager) GetAccessToken(ctx context.Context) (string, error) {
 	tm.mu.RLock()
 	token := tm.accessToken
 	expiration := tm.expiresAt
@@ -317,23 +319,23 @@ func (tm *TokenManager) GetAccessToken() (string, error) {
 		return token, nil
 	}
 
-	return tm.refreshToken()
+	return tm.refreshToken(ctx)
 }
 
-func (tm *TokenManager) refreshToken() (string, error) {
+func (tm *TokenManager) refreshToken(ctx context.Context) (string, error) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
-	log.Println("Renovando o access token...")
+	tm.logger.Info("Renovando o access token...")
 
 	tokenURL := "https://idm.stackspot.com/zup/oidc/oauth/token"
 	data := strings.NewReader(fmt.Sprintf(
 		"grant_type=client_credentials&client_id=%s&client_secret=%s",
 		tm.clientID, tm.clientSecret))
 
-	req, err := http.NewRequest("POST", tokenURL, data)
+	req, err := http.NewRequestWithContext(ctx, "POST", tokenURL, data)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("erro ao criar a requisição: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -342,20 +344,20 @@ func (tm *TokenManager) refreshToken() (string, error) {
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("erro ao fazer a requisição: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)
 		errMsg := fmt.Sprintf("falha ao obter o token: %s", string(bodyBytes))
-		log.Printf(errMsg)
+		tm.logger.Error(errMsg)
 		return "", fmt.Errorf(errMsg)
 	}
 
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
+		return "", fmt.Errorf("erro ao decodificar a resposta: %w", err)
 	}
 
 	accessToken, ok := result["access_token"].(string)
@@ -370,7 +372,12 @@ func (tm *TokenManager) refreshToken() (string, error) {
 
 	tm.accessToken = accessToken
 	tm.expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
-	log.Printf("Token renovado com sucesso. Expira em: %s", tm.expiresAt)
+	tm.logger.Info("Token renovado com sucesso", zap.Time("expires_at", tm.expiresAt))
 
 	return tm.accessToken, nil
+}
+
+// Função para gerar um UUID
+func generateUUID() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
 }

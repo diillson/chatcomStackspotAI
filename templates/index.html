@@ -19,57 +19,60 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js" defer></script>
 </head>
 <body data-model-name="{{.ModelName}}">
-<!-- Barra Lateral -->
-<aside id="sidebar" class="hidden">
-    <!-- Botões dentro da barra lateral -->
-    <div class="sidebar-buttons">
-        <button id="toggle-sidebar" aria-label="Ocultar barra lateral" class="toggle-sidebar">
-            <i class="fas fa-angle-left"></i>
-        </button>
-        <button id="toggle-theme" aria-label="Alternar tema" class="toggle-theme">
-            <i class="fas fa-moon"></i>
-        </button>
-    </div>
-    <div id="chat-list">
-        <!-- Lista de conversas anteriores será gerada dinamicamente aqui -->
-    </div>
-    <button id="new-chat-button" aria-label="Iniciar nova conversa">
-        <i class="fas fa-plus"></i> Nova Conversa
-    </button>
-</aside>
-
-<!-- Área Principal do Chat -->
-<main id="chat-container">
-    <!-- Botões Superiores -->
-    <div class="top-left-buttons">
-        <!-- Botão de Toggle Sidebar -->
-        <button id="toggle-sidebar-hidden" aria-label="Mostrar barra lateral" class="toggle-sidebar">
-            <i class="fas fa-bars"></i>
-        </button>
-        <!-- Botão de Alternância de Tema -->
-        <button id="toggle-theme-hidden" aria-label="Alternar tema" class="toggle-theme">
-            <i class="fas fa-moon"></i>
-        </button>
-    </div>
-    <!-- Mensagens -->
-    <div id="messages"></div>
-    <!-- Formulário de Entrada -->
-    <form id="chat-form" aria-label="Formulário de Chat">
-        <textarea id="user-input" placeholder="Digite sua mensagem..." required aria-label="Entrada de mensagem" rows="1"></textarea>
-        <div class="form-actions">
-            <button type="submit" aria-label="Enviar mensagem">
-                <i class="fas fa-paper-plane"></i>
+<!-- Container Principal -->
+<div id="main-container">
+    <!-- Barra Lateral -->
+    <aside id="sidebar">
+        <!-- Botões dentro da barra lateral -->
+        <div class="sidebar-buttons">
+            <button id="toggle-sidebar" aria-label="Ocultar barra lateral" class="toggle-sidebar">
+                <i class="fas fa-angle-left"></i>
             </button>
-            <button type="button" id="clear-history-button" aria-label="Limpar histórico">
-                <i class="fas fa-trash-alt"></i>
+            <button id="toggle-theme" aria-label="Alternar tema" class="toggle-theme">
+                <i class="fas fa-moon"></i>
             </button>
-            <select id="llm-provider-select" aria-label="Selecionar Provedor de LLM">
-                <option value="STACKSPOT">StackSpotAI</option>
-                <option value="OPENAI">OpenAI</option>
-            </select>
         </div>
-    </form>
-</main>
+        <div id="chat-list">
+            <!-- Lista de conversas anteriores será gerada dinamicamente aqui -->
+        </div>
+        <button id="new-chat-button" aria-label="Iniciar nova conversa">
+            <i class="fas fa-plus"></i> Nova Conversa
+        </button>
+    </aside>
+
+    <!-- Área Principal do Chat -->
+    <main id="chat-container">
+        <!-- Botões Superiores -->
+        <div class="top-left-buttons">
+            <!-- Botão de Toggle Sidebar -->
+            <button id="toggle-sidebar-hidden" aria-label="Mostrar barra lateral" class="toggle-sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <!-- Botão de Alternância de Tema -->
+            <button id="toggle-theme-hidden" aria-label="Alternar tema" class="toggle-theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <!-- Mensagens -->
+        <div id="messages"></div>
+        <!-- Formulário de Entrada -->
+        <form id="chat-form" aria-label="Formulário de Chat">
+            <textarea id="user-input" placeholder="Digite sua mensagem..." required aria-label="Entrada de mensagem" rows="1"></textarea>
+            <div class="form-actions">
+                <button type="submit" aria-label="Enviar mensagem">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+                <button type="button" id="clear-history-button" aria-label="Limpar histórico">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <select id="llm-provider-select" aria-label="Selecionar Provedor de LLM">
+                    <option value="STACKSPOT">StackSpotAI</option>
+                    <option value="OPENAI">OpenAI</option>
+                </select>
+            </div>
+        </form>
+    </main>
+</div>
 
 <!-- Scripts -->
 <script src="/static/js/script.js" defer></script>

@@ -221,12 +221,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleSidebar() {
         if (sidebar.classList.contains('hidden')) {
             sidebar.classList.remove('hidden');
-            chatContainer.classList.remove('full-width');
         } else {
             sidebar.classList.add('hidden');
-            chatContainer.classList.add('full-width');
         }
     }
+
 
     function addMessage(sender, text, messageClass, isMarkdown = false, save = true, isTyping = false) {
         const messageElement = document.createElement('div');
