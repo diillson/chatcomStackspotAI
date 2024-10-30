@@ -55,7 +55,7 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
 
 - **Chat Interativo:** Converse com uma inteligência artificial em tempo real, alimentada pela StackSpot AI ou pela OpenAI.
 - **Múltiplas Conversas:** Crie, renomeie e exclua chats independentes.
-- **Manutenção de Contexto:** O assistente de IA mantém o contexto da conversa para interações mais coerentes (ao usar OpenAI).
+- **Manutenção de Contexto:** O assistente de IA mantém o contexto da conversa para interações mais coerentes.
 - **Troca Dinâmica de Provedor de LLM:** Alterne entre StackSpot AI e OpenAI em tempo de execução, sem reiniciar a aplicação.
 - **Barra Lateral Personalizável:** Oculte ou exiba a barra lateral conforme sua preferência.
 - **Histórico de Mensagens:** O histórico é armazenado no `localStorage` do navegador.
