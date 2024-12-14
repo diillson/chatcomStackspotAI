@@ -58,10 +58,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return 'GPT-4o-mini';
                 } else if (model.includes('gpt-4')) {
                     return 'GPT-4';
+                } else if (model.includes('gpt-4o')) {
+                    return 'GPT-4o';
                 } else if (model.includes('gpt-3.5')) {
                     return 'ChatGPT';
                 } else if (model.includes('o1-preview')) {
-                    return 'o1-preview';
+                    return 'GPT-o1-preview';
                 }
                 return `GPT (${model})`;
 
