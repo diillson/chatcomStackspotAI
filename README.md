@@ -1,4 +1,4 @@
-# Aplicativo de Chat com Integração à StackSpot AI e OpenAI
+# Aplicativo de Chat com Integração à StackSpot AI, OpenAI e ClaudeAI
 
 Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado à **StackSpot AI** e aos modelos GPT da **OpenAI**. Este aplicativo permite que você se comunique com uma inteligência artificial em um ambiente web amigável, aproveitando os poderosos recursos fornecidos pela StackSpot AI e pela OpenAI, incluindo fontes de conhecimento, comandos rápidos, agentes especializados e conversas com manutenção de contexto.
 
@@ -76,6 +76,8 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
   - **Para OpenAI:**
     - Chave de API da OpenAI com acesso aos modelos desejados (por exemplo, `gpt-3.5-turbo`, `gpt-4`).
     - Observe que o acesso ao `gpt-4` pode exigir permissões adicionais.
+  - **Para ClaudeAI:**
+    - Chave de API da ClaudeAI com acesso aos modelos desejados (por exemplo, `claude-3-5-sonnet-20241022`).
 - **Chaves de API:** Chaves de API e variáveis de ambiente configuradas corretamente para os provedores de LLM.
 
 ## Instalação e Configuração
@@ -120,6 +122,18 @@ Exemplo:
 ```bash
 export OPENAI_API_KEY=sua_chave_api_openai
 export OPENAI_MODEL=gpt-4 # ou gpt-3.5-turbo
+```
+
+#### Para ClaudeAI:
+
+- **CLAUDEAI_API_KEY:** Sua chave de API da OpenAI.
+- **CLAUDEAI_MODEL:** O modelo que você deseja usar (`claude-3-5-sonnet-20241022`, etc.).
+
+Exemplo:
+
+```bash
+export CLAUDEAI_API_KEY=sua_chave_api_claudeai
+export CLAUDEAI_MODEL=claude-3-5-sonnet-20241022 # ou gpt-3.5-turbo
 ```
 
 **Nota:** Certifique-se de que suas chaves de API têm acesso aos modelos especificados.
