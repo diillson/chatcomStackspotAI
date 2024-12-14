@@ -1,21 +1,21 @@
 package llm
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/chatcomStackspotAI/models"
 	"go.uber.org/zap"
-	"io/ioutil"
+	"io"
 	"net/http"
-	"time"
+	"strings"
 )
 
 type ClaudeAIClient struct {
 	apiKey string
 	model  string
 	logger *zap.Logger
+	client *http.Client
 }
 
 func NewClaudeAIClient(apiKey, model string, logger *zap.Logger) *ClaudeAIClient {
@@ -30,86 +30,86 @@ func (c *ClaudeAIClient) GetModelName() string {
 	return c.model
 }
 
+// SendPrompt monta a requisição com o histórico e a envia para a ClaudeAI, retornando a resposta formatada
 func (c *ClaudeAIClient) SendPrompt(ctx context.Context, prompt string, history []models.Message) (string, error) {
-	url := "https://api.claudeai.com/v1/completions"
+	messages := c.buildMessages(prompt, history)
 
-	// Construir o array de mensagens
-	messages := []map[string]string{}
+	reqBody := map[string]interface{}{
+		"model":      c.model,
+		"max_tokens": 8192,
+		"messages":   messages,
+	}
+	reqJSON, _ := json.Marshal(reqBody)
 
-	// Adicionar o histórico
-	for _, msg := range history {
-		messages = append(messages, map[string]string{
-			"role":    msg.Role,
-			"content": msg.Content,
-		})
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.anthropic.com/v1/messages", strings.NewReader(string(reqJSON)))
+	if err != nil {
+		c.logger.Error("Erro ao criar a requisição de prompt", zap.Error(err))
+		return "", fmt.Errorf("erro ao criar a requisição: %w", err)
 	}
 
-	// Adicionar a nova mensagem do usuário
-	messages = append(messages, map[string]string{
-		"role":    "user",
-		"content": prompt,
-	})
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("x-api-key", c.apiKey)
+	req.Header.Add("anthropic-version", "2023-06-01")
 
-	payload := map[string]interface{}{
-		"model":    c.model,
-		"messages": messages,
+	resp, err := c.client.Do(req)
+	if err != nil {
+		c.logger.Error("Erro ao fazer a requisição de prompt", zap.Error(err))
+		return "", fmt.Errorf("erro ao fazer a requisição: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		c.logger.Error("Erro ao obter resposta da ClaudeAI", zap.Int("status", resp.StatusCode), zap.String("body", string(body)))
+		return "", fmt.Errorf("erro ao obter resposta da ClaudeAI: status %d, body %s", resp.StatusCode, string(body))
 	}
 
-	jsonValue, _ := json.Marshal(payload)
+	return c.parseResponse(resp)
+}
 
-	maxAttempts := 3
-	backoff := time.Second
+// buildMessages monta o histórico de mensagens para incluir na requisição
+func (c *ClaudeAIClient) buildMessages(prompt string, history []models.Message) []map[string]string {
+	messages := make([]map[string]string, len(history))
 
-	for attempt := 1; attempt <= maxAttempts; attempt++ {
-		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonValue))
-		if err != nil {
-			return "", fmt.Errorf("erro ao criar a requisição: %w", err)
+	// Processa o histórico, garantindo que role e content estejam bem definidos
+	for i, msg := range history {
+		role := "user"
+		if msg.Role == "assistant" {
+			role = "assistant"
 		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", "Bearer "+c.apiKey)
-
-		client := &http.Client{
-			Timeout: 30 * time.Second,
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			if isTemporaryError(err) {
-				c.logger.Warn("Erro temporário ao chamar ClaudeAI", zap.Int("attempt", attempt), zap.Error(err))
-				if attempt < maxAttempts {
-					time.Sleep(backoff)
-					backoff *= 2 // Backoff exponencial
-					continue
-				}
-			}
-			return "", fmt.Errorf("erro ao fazer a requisição para ClaudeAI: %w", err)
-		}
-		defer resp.Body.Close()
-
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return "", fmt.Errorf("erro ao ler a resposta da ClaudeAI: %w", err)
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			errMsg := fmt.Sprintf("Erro na requisição à ClaudeAI: status %d, resposta: %s", resp.StatusCode, string(bodyBytes))
-			return "", fmt.Errorf(errMsg)
-		}
-
-		var result map[string]interface{}
-		if err := json.Unmarshal(bodyBytes, &result); err != nil {
-			return "", fmt.Errorf("erro ao decodificar a resposta da ClaudeAI: %w", err)
-		}
-
-		choices, ok := result["choices"].([]interface{})
-		if !ok || len(choices) == 0 {
-			return "", fmt.Errorf("Nenhuma resposta recebida da ClaudeAI")
-		}
-
-		firstChoice := choices[0].(map[string]interface{})
-		content := firstChoice["text"].(string)
-
-		return content, nil
+		messages[i] = map[string]string{"role": role, "content": msg.Content}
 	}
 
-	return "", fmt.Errorf("Falha ao obter resposta da ClaudeAI após %d tentativas", maxAttempts)
+	// Adiciona a mensagem atual do usuário ao final
+	messages = append(messages, map[string]string{"role": "user", "content": prompt})
+
+	return messages
+}
+
+// parseResponse decodifica e processa a resposta da ClaudeAI
+func (c *ClaudeAIClient) parseResponse(resp *http.Response) (string, error) {
+	var result struct {
+		Content []struct {
+			Type string `json:"type"`
+			Text string `json:"text"`
+		} `json:"content"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		c.logger.Error("Erro ao decodificar a resposta da ClaudeAI", zap.Error(err))
+		return "", fmt.Errorf("erro ao decodificar a resposta: %w", err)
+	}
+
+	var responseText string
+	for _, content := range result.Content {
+		if content.Type == "text" {
+			responseText += content.Text
+		}
+	}
+
+	if responseText == "" {
+		c.logger.Error("Nenhum conteúdo de texto encontrado na resposta da ClaudeAI")
+		return "", fmt.Errorf("erro ao obter a resposta da ClaudeAI")
+	}
+
+	return responseText, nil
 }
