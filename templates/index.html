@@ -18,7 +18,11 @@
     <!-- Highlight.js JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js" defer></script>
 </head>
-<body data-model-name="{{.ModelName}}">
+<body
+        data-openai-model="{{.OpenAIModel}}"
+        data-claude-model="{{.ClaudeModel}}"
+        data-stackspot-model="{{.DefaultModel}}"
+        data-current-model="{{.CurrentModel}}">
 <!-- Container Principal -->
 <div id="main-container">
     <!-- Barra Lateral -->

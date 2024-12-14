@@ -14,12 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatContainer = document.getElementById('chat-container');
     const toggleSidebarButtonHidden = document.getElementById('toggle-sidebar-hidden');
     const toggleThemeButtonHidden = document.getElementById('toggle-theme-hidden');
+    const openaiModel = document.body.getAttribute('data-openai-model') || 'gpt-4o-mini';
+    const claudeModel = document.body.getAttribute('data-claude-model') || 'claude-3-5-sonnet-20241022';
+    const stackspotModel = document.body.getAttribute('data-stackspot-model') || 'stackspot-default';
 
     // Estado do aplicativo
     let currentChatID = null;
     let llmProvider = localStorage.getItem('llmProvider') || 'STACKSPOT';
-    let modelName = document.body.getAttribute('data-model-name') || 'gpt-4o-mini';
-    let assistantName = getAssistantName(llmProvider, modelName);
+    let modelName = '';
+    let assistantName = '';
     let shouldAutoScroll = true; // Controla se o scroll automático está ativo
 
     // Verificar se o session_id já existe, caso contrário, gerá-lo e salvá-lo no localStorage
@@ -46,12 +49,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Inicialização
-    initialize();
+    function getAssistantName(provider, model) {
+        console.log('Getting assistant name for:', provider, model);
+
+        switch (provider) {
+            case 'OPENAI':
+                if (model.includes('gpt-4o-mini')) {
+                    return 'GPT-4o-mini';
+                } else if (model.includes('gpt-4')) {
+                    return 'GPT-4';
+                } else if (model.includes('gpt-3.5')) {
+                    return 'ChatGPT';
+                } else if (model.includes('o1-preview')) {
+                    return 'o1-preview';
+                }
+                return `GPT (${model})`;
+
+            case 'CLAUDEAI':
+                if (model.includes('claude-3.5')) {
+                    return 'Claude 3.5 Sonet';
+                } else if (model.includes('claude-2')) {
+                    return 'Claude 2';
+                }
+                return 'Claude AI';
+
+            case 'STACKSPOT':
+                return 'StackSpotAI';
+
+            default:
+                return 'Assistente';
+        }
+    }
 
     function initialize() {
         // Configurar o seletor de provedor LLM
         llmProviderSelect.value = llmProvider;
+        handleProviderChange();
 
         // Atualizar o assistantName
         assistantName = getAssistantName(llmProvider, modelName);
@@ -87,6 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListeners();
     }
 
+    // Inicialização
+    initialize();
+
     function addEventListeners() {
         llmProviderSelect.addEventListener('change', handleProviderChange);
         chatForm.addEventListener('submit', handleFormSubmit);
@@ -103,36 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function getAssistantName(provider, model) {
-        switch (provider) {
-            case 'STACKSPOT':
-                return 'StackSpotAI';
-            case 'OPENAI':
-                if (model === 'gpt-4') {
-                    return 'GPT-4';
-                } else if (model === 'gpt-3.5-turbo') {
-                    return 'ChatGPT';
-                } else if (model === 'gpt-4o-mini') {
-                    return 'GPT-4o-mini';
-                } else if (model === 'gpt-4o') {
-                    return 'GPT-4o';
-                } else if (model === 'o1-preview') {
-                    return 'o1-preview';
-                } else if (model === 'o1-mini') {
-                    return 'o1-mini';
-                }else {
-                    return 'OpenAI Assistant';
-                }
-            case 'CLAUDEAI':
-                if (model === 'claude-3-5-sonnet-20241022') {
-                    return 'claude 3.5 sonnet';
-                }
-                return 'ClaudeAI Assistant';
-            default:
-                return 'Assistente';
-        }
-    }
-
     // Função para verificar se o usuário está perto do final do chat
     function checkIfShouldAutoScroll() {
         const threshold = 50; // Distância do final para ativar o autoscroll
@@ -144,19 +150,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleProviderChange() {
         llmProvider = llmProviderSelect.value;
         localStorage.setItem('llmProvider', llmProvider);
-        // Atualizar o modelo com base no provedor
-        switch(llmProvider) {
-            case 'CLAUDEAI':
-                modelName = 'claude-3-5-sonnet-20241022';
-                break;
+
+        // Atualizar o modelo baseado no provedor
+        switch (llmProvider) {
             case 'OPENAI':
-                modelName = 'gpt-3.5-turbo';
+                modelName = openaiModel;
+                break;
+            case 'CLAUDEAI':
+                modelName = claudeModel;
                 break;
             case 'STACKSPOT':
-                modelName = 'stackspot-default';
+                modelName = stackspotModel;
                 break;
         }
+
+        console.log('Provider changed to:', llmProvider);
+        console.log('Model selected:', modelName);
+
+        // Atualizar o nome do assistente
         assistantName = getAssistantName(llmProvider, modelName);
+        console.log('Assistant name updated to:', assistantName);
     }
 
     function isChatExists(chatID) {

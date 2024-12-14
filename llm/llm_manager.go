@@ -23,6 +23,7 @@ func NewLLMManager(logger *zap.Logger) (*LLMManager, error) {
 		logger.Warn("OPENAI_API_KEY não está definido")
 	} else {
 		manager.clients["OPENAI"] = func(model string) (LLMClient, error) {
+			model = os.Getenv("OPENAI_MODEL")
 			if model == "" {
 				model = "gpt-3.5-turbo" // Modelo padrão
 			}
@@ -49,6 +50,7 @@ func NewLLMManager(logger *zap.Logger) (*LLMManager, error) {
 		logger.Warn("CLAUDEAI_API_KEY não está definido")
 	} else {
 		manager.clients["CLAUDEAI"] = func(model string) (LLMClient, error) {
+			model = os.Getenv("CLAUDEAI_MODEL")
 			if model == "" {
 				model = "claude-3-5-sonnet-20241022" // Modelo padrão
 			}
@@ -64,9 +66,35 @@ func (m *LLMManager) GetClient(provider string, model string) (LLMClient, error)
 	if !ok {
 		return nil, fmt.Errorf("Provedor LLM '%s' não suportado", provider)
 	}
-	client, err := factoryFunc(model)
-	if err != nil {
-		return nil, err
+
+	// Cada provedor deve usar seu próprio modelo específico
+	var selectedModel string
+	switch provider {
+	case "OPENAI":
+		selectedModel = os.Getenv("OPENAI_MODEL")
+		if selectedModel == "" {
+			selectedModel = "gpt-3.5-turbo" // Modelo padrão OpenAI
+		}
+		m.logger.Info("Selecionando modelo OpenAI", zap.String("model", selectedModel))
+	case "CLAUDEAI":
+		selectedModel = os.Getenv("CLAUDEAI_MODEL")
+		if selectedModel == "" {
+			selectedModel = "claude-3-5-sonnet-20241022" // Modelo padrão Claude
+		}
+		m.logger.Info("Selecionando modelo ClaudeAI", zap.String("model", selectedModel))
+	case "STACKSPOT":
+		selectedModel = "stackspot-default"
+		m.logger.Info("Selecionando modelo StackSpot", zap.String("model", selectedModel))
 	}
+
+	m.logger.Info("Criando cliente LLM",
+		zap.String("provider", provider),
+		zap.String("selectedModel", selectedModel))
+
+	client, err := factoryFunc(selectedModel)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao criar cliente para provedor %s: %w", provider, err)
+	}
+
 	return client, nil
 }

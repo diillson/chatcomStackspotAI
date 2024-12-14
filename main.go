@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/chatcomStackspotAI/handlers"
 	"github.com/chatcomStackspotAI/llm"
@@ -22,27 +23,39 @@ func indexHandler(logger *zap.Logger) http.HandlerFunc {
 			http.Error(w, "Erro ao carregar o template", http.StatusInternalServerError)
 			return
 		}
-		// Definir modelo com base no provedor selecionado
-		provider := r.URL.Query().Get("provider")
-		var modelName string
 
-		switch provider {
-		case "CLAUDEAI":
-			modelName = os.Getenv("CLAUDEAI_MODEL")
-			if modelName == "" {
-				modelName = "claude-3-5-sonnet-20241022"
-			}
-		case "OPENAI":
-			modelName = os.Getenv("OPENAI_MODEL")
-			if modelName == "" {
-				modelName = "gpt-3.5-turbo"
-			}
-		default:
-			modelName = "stackspot-default"
+		data := map[string]string{
+			"OpenAIModel":  os.Getenv("OPENAI_MODEL"),
+			"ClaudeModel":  os.Getenv("CLAUDEAI_MODEL"),
+			"DefaultModel": "stackspot-default",
+			"CurrentModel": os.Getenv("OPENAI_MODEL"), // Modelo inicial
 		}
-		tmpl.Execute(w, map[string]string{
-			"ModelName": modelName,
-		})
+
+		if data["OpenAIModel"] == "" {
+			data["OpenAIModel"] = "gpt-4o-mini"
+		}
+		if data["ClaudeModel"] == "" {
+			data["ClaudeModel"] = "claude-3-5-sonnet-20241022"
+		}
+
+		logger.Info("Carregando página com modelos",
+			zap.String("openai_model", data["OpenAIModel"]),
+			zap.String("claude_model", data["ClaudeModel"]))
+
+		tmpl.Execute(w, data)
+	}
+}
+
+func getModelsHandler(logger *zap.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		models := map[string]string{
+			"openai":  os.Getenv("OPENAI_MODEL"),
+			"claude":  os.Getenv("CLAUDEAI_MODEL"),
+			"default": "stackspot-default",
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(models)
 	}
 }
 
@@ -74,6 +87,7 @@ func main() {
 	mux.HandleFunc("/", indexHandler(logger))
 	mux.HandleFunc("/send", handlers.SendMessageHandler(manager, responseStore, logger))
 	mux.HandleFunc("/get-response", handlers.GetResponseHandler(responseStore, logger))
+	mux.HandleFunc("/api/models", getModelsHandler(logger))
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	finalHandler := middlewares.ForceHTTPSMiddleware(mux, logger)
