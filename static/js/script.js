@@ -144,6 +144,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleProviderChange() {
         llmProvider = llmProviderSelect.value;
         localStorage.setItem('llmProvider', llmProvider);
+        // Atualizar o modelo com base no provedor
+        switch(llmProvider) {
+            case 'CLAUDEAI':
+                modelName = 'claude-3-5-sonnet-20241022';
+                break;
+            case 'OPENAI':
+                modelName = 'gpt-3.5-turbo';
+                break;
+            case 'STACKSPOT':
+                modelName = 'stackspot-default';
+                break;
+        }
         assistantName = getAssistantName(llmProvider, modelName);
     }
 

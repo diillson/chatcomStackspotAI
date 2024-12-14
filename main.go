@@ -22,10 +22,23 @@ func indexHandler(logger *zap.Logger) http.HandlerFunc {
 			http.Error(w, "Erro ao carregar o template", http.StatusInternalServerError)
 			return
 		}
-		// Obter o modelName da variável de ambiente ou usar um valor padrão
-		modelName := os.Getenv("OPENAI_MODEL")
-		if modelName == "" {
-			modelName = "gpt-4o-mini" // Modelo padrão
+		// Definir modelo com base no provedor selecionado
+		provider := r.URL.Query().Get("provider")
+		var modelName string
+
+		switch provider {
+		case "CLAUDEAI":
+			modelName = os.Getenv("CLAUDEAI_MODEL")
+			if modelName == "" {
+				modelName = "claude-3-5-sonnet-20241022"
+			}
+		case "OPENAI":
+			modelName = os.Getenv("OPENAI_MODEL")
+			if modelName == "" {
+				modelName = "gpt-3.5-turbo"
+			}
+		default:
+			modelName = "stackspot-default"
 		}
 		tmpl.Execute(w, map[string]string{
 			"ModelName": modelName,
