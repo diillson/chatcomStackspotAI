@@ -12,6 +12,7 @@ Bem-vindo ao aplicativo de chat interativo semelhante ao ChatGPT, mas integrado 
   - [3. Configurar Variáveis de Ambiente](#3-configurar-variáveis-de-ambiente)
     - [Para StackSpot AI:](#para-stackspot-ai)
     - [Para OpenAI:](#para-openai)
+    - [Para ClaudeAI:](#para-claudeai)
   - [4. Instale as Dependências Backend](#4-instale-as-dependências-backend)
   - [5. Configurar o Ambiente de Execução](#5-configurar-o-ambiente-de-execução)
   - [6. Execute o Servidor Backend](#6-execute-o-servidor-backend)
