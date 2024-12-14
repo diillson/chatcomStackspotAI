@@ -114,7 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     return 'ChatGPT';
                 } else if (model === 'gpt-4o-mini') {
                     return 'GPT-4o-mini';
-                } else {
+                } else if (model === 'gpt-4o') {
+                    return 'GPT-4o';
+                } else if (model === 'o1-preview') {
+                    return 'o1-preview';
+                } else if (model === 'o1-mini') {
+                    return 'o1-mini';
+                }else {
                     return 'OpenAI Assistant';
                 }
             default:

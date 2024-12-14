@@ -99,7 +99,7 @@ func (c *StackSpotClient) SendPrompt(ctx context.Context, prompt string, history
 // Implementação das funções auxiliares com retry
 
 func (c *StackSpotClient) sendRequestToLLMWithRetry(ctx context.Context, prompt, accessToken string) (string, error) {
-	maxAttempts := 3
+	maxAttempts := 5
 	backoff := time.Second
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
