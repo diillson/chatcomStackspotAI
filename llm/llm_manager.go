@@ -43,6 +43,19 @@ func NewLLMManager(logger *zap.Logger) (*LLMManager, error) {
 		}
 	}
 
+	// Configurar a fábrica para ClaudeAI
+	claudeAPIKey := os.Getenv("CLAUDEAI_API_KEY")
+	if claudeAPIKey == "" {
+		logger.Warn("CLAUDEAI_API_KEY não está definido")
+	} else {
+		manager.clients["CLAUDEAI"] = func(model string) (LLMClient, error) {
+			if model == "" {
+				model = "claude-3-5-sonnet-20241022" // Modelo padrão
+			}
+			return NewClaudeAIClient(claudeAPIKey, model, logger), nil
+		}
+	}
+
 	return manager, nil
 }
 

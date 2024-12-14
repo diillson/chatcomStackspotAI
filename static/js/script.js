@@ -123,6 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }else {
                     return 'OpenAI Assistant';
                 }
+            case 'CLAUDEAI':
+                if (model === 'claude-3-5-sonnet-20241022') {
+                    return 'claude 3.5 sonnet';
+                }
+                return 'ClaudeAI Assistant';
             default:
                 return 'Assistente';
         }
