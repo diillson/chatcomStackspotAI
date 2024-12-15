@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `GPT (${model})`;
 
             case 'CLAUDEAI':
-                if (model.includes('claude-3.5')) {
+                if (model.includes('claude-3')) {
                     return 'Claude 3.5 Sonet';
                 } else if (model.includes('claude-2')) {
                     return 'Claude 2';
