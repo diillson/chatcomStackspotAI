@@ -236,12 +236,33 @@ body.dark-mode #chat-form {
     background-color: #0d0d0d;
 }
 
+body.dark-mode #user-input {
+    flex-grow: 1;
+    width: calc(100% - 50px);
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #1e1e1e;
+    color: #dcdcdc;
+}
+
 body.dark-mode .message-content {
     background-color: #1e1e1e;
 }
 
 body.dark-mode #new-chat-button {
     background-color: #1e1e1e;
+}
+
+body.dark-mode #llm-provider-select {
+    background-color: #0d0d0d;
+    color: #dcdcdc;
+    border: none;
+    font-size: 16px;
+    padding: 5px;
 }
 
 body.dark-mode .top-left-buttons button {
