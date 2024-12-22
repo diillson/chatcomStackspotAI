@@ -313,6 +313,11 @@ body.dark-mode .top-left-buttons button {
         padding: 8px;
     }
 
+    body.dark-mode #user-input {
+        font-size: 14px;
+        padding: 8px;
+    }
+
     .form-actions button,
     .form-actions select {
         font-size: 18px;
@@ -348,6 +353,11 @@ body.dark-mode .top-left-buttons button {
     }
 
     #user-input {
+        font-size: 14px;
+        width: 100%;
+    }
+
+    body.dark-mode #user-input {
         font-size: 14px;
         width: 100%;
     }
