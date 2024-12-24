@@ -16,11 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleThemeButtonHidden = document.getElementById('toggle-theme-hidden');
     const openaiModel = document.body.getAttribute('data-openai-model') || 'gpt-4o-mini';
     const claudeModel = document.body.getAttribute('data-claude-model') || 'claude-3-5-sonnet-20241022';
-    const stackspotModel = document.body.getAttribute('data-stackspot-model') || 'stackspot-default';
+    const stackspotModel = document.body.getAttribute('data-spot-model') || 'spot-default';
 
     // Estado do aplicativo
     let currentChatID = null;
-    let llmProvider = localStorage.getItem('llmProvider') || 'OPENAI';
+    let llmProvider = localStorage.getItem('llmProvider') || 'SPOT';
     let modelName = '';
     let assistantName = '';
     let shouldAutoScroll = true; // Controla se o scroll automático está ativo
@@ -75,8 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return 'Claude AI';
 
-            case 'STACKSPOT':
-                return 'StackSpotAI';
+            case 'SPOT':
+                return 'GPT-4o';
 
             default:
                 return 'Assistente';

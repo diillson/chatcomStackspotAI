@@ -39,7 +39,7 @@ func NewLLMManager(logger *zap.Logger) (*LLMManager, error) {
 		logger.Warn("As credenciais do StackSpot não estão definidas")
 	} else {
 		tokenManager := NewTokenManager(clientID, clientSecret, logger)
-		manager.clients["STACKSPOT"] = func(model string) (LLMClient, error) {
+		manager.clients["SPOT"] = func(model string) (LLMClient, error) {
 			return NewStackSpotClient(tokenManager, slug, logger), nil
 		}
 	}
@@ -82,9 +82,9 @@ func (m *LLMManager) GetClient(provider string, model string) (LLMClient, error)
 			selectedModel = "claude-3-5-sonnet-20241022" // Modelo padrão Claude
 		}
 		m.logger.Info("Selecionando modelo ClaudeAI", zap.String("model", selectedModel))
-	case "STACKSPOT":
-		selectedModel = "stackspot-default"
-		m.logger.Info("Selecionando modelo StackSpot", zap.String("model", selectedModel))
+	case "SPOT":
+		selectedModel = "spot-default"
+		m.logger.Info("Selecionando modelo GPT-4o", zap.String("model", selectedModel))
 	}
 
 	m.logger.Info("Criando cliente LLM",

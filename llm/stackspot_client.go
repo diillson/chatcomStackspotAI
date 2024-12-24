@@ -29,7 +29,7 @@ func NewStackSpotClient(tokenManager *TokenManager, slug string, logger *zap.Log
 }
 
 func (c *StackSpotClient) GetModelName() string {
-	return "StackSpotAI"
+	return "GPT-4o"
 }
 
 // Função para formatar o histórico da conversa
@@ -106,19 +106,19 @@ func (c *StackSpotClient) sendRequestToLLMWithRetry(ctx context.Context, prompt,
 		responseID, err := c.sendRequestToLLM(ctx, prompt, accessToken)
 		if err != nil {
 			if isTemporaryError(err) {
-				c.logger.Warn("Erro temporário ao enviar requisição para StackSpotAI", zap.Int("attempt", attempt), zap.Error(err))
+				c.logger.Warn("Erro temporário ao enviar requisição para GPT-4o", zap.Int("attempt", attempt), zap.Error(err))
 				if attempt < maxAttempts {
 					time.Sleep(backoff)
 					backoff *= 2 // Backoff exponencial
 					continue
 				}
 			}
-			return "", fmt.Errorf("erro ao enviar requisição para StackSpotAI: %w", err)
+			return "", fmt.Errorf("erro ao enviar requisição para GPT-4o: %w", err)
 		}
 		return responseID, nil
 	}
 
-	return "", fmt.Errorf("falha ao enviar requisição para StackSpotAI após %d tentativas", maxAttempts)
+	return "", fmt.Errorf("falha ao enviar requisição para GPT-4o após %d tentativas", maxAttempts)
 }
 
 func (c *StackSpotClient) getLLMResponseWithRetry(ctx context.Context, responseID, accessToken string) (string, error) {
@@ -129,19 +129,19 @@ func (c *StackSpotClient) getLLMResponseWithRetry(ctx context.Context, responseI
 		llmResponse, err := c.getLLMResponse(ctx, responseID, accessToken)
 		if err != nil {
 			if isTemporaryError(err) {
-				c.logger.Warn("Erro temporário ao obter resposta da StackSpotAI", zap.Int("attempt", attempt), zap.Error(err))
+				c.logger.Warn("Erro temporário ao obter resposta da GPT-4o", zap.Int("attempt", attempt), zap.Error(err))
 				if attempt < maxAttempts {
 					time.Sleep(backoff)
 					backoff *= 2 // Backoff exponencial
 					continue
 				}
 			}
-			return "", fmt.Errorf("erro ao obter resposta da StackSpotAI: %w", err)
+			return "", fmt.Errorf("erro ao obter resposta da GPT-4o: %w", err)
 		}
 		return llmResponse, nil
 	}
 
-	return "", fmt.Errorf("falha ao obter resposta da StackSpotAI após %d tentativas", maxAttempts)
+	return "", fmt.Errorf("falha ao obter resposta da GPT-4o após %d tentativas", maxAttempts)
 }
 
 func (c *StackSpotClient) sendRequestToLLM(ctx context.Context, prompt, accessToken string) (string, error) {

@@ -27,7 +27,7 @@ func indexHandler(logger *zap.Logger) http.HandlerFunc {
 		data := map[string]string{
 			"OpenAIModel":  os.Getenv("OPENAI_MODEL"),
 			"ClaudeModel":  os.Getenv("CLAUDEAI_MODEL"),
-			"DefaultModel": "stackspot-default",
+			"DefaultModel": "spot-default",
 			"CurrentModel": os.Getenv("OPENAI_MODEL"), // Modelo inicial
 		}
 
@@ -51,7 +51,7 @@ func getModelsHandler(logger *zap.Logger) http.HandlerFunc {
 		models := map[string]string{
 			"openai":  os.Getenv("OPENAI_MODEL"),
 			"claude":  os.Getenv("CLAUDEAI_MODEL"),
-			"default": "stackspot-default",
+			"default": "spot-default",
 		}
 
 		w.Header().Set("Content-Type", "application/json")
