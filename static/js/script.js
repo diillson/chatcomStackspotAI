@@ -627,7 +627,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadUserTheme() {
-        const savedTheme = localStorage.getItem('theme');
+        let savedTheme = localStorage.getItem('theme');
+        if (!savedTheme){
+            savedTheme = 'dark';
+            localStorage.setItem('theme', 'dark');
+        }
         const isDarkMode = savedTheme === 'dark';
 
         highlightStyleLink.onload = function() {
