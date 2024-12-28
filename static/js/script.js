@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessageToServer(message);
             userInput.value = '';
             userInput.style.height = 'auto';
+            userInput.blur();
         }
     }
 

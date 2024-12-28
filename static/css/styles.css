@@ -311,6 +311,9 @@ body.dark-mode .top-left-buttons button {
     #user-input {
         font-size: 14px;
         padding: 8px;
+        -webkit-user-select: text;
+        user-select: text;
+        -webkit-tap-highlight-color: transparent;
     }
 
     body.dark-mode #user-input {
