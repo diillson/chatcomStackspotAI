@@ -64,6 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return 'ChatGPT';
                 } else if (model.includes('o1-preview')) {
                     return 'GPT-o1-preview';
+                } else if (model.includes('o1')) {
+                    return 'GPT-o1';
                 }
                 return `GPT (${model})`;
 
